@@ -5,7 +5,12 @@ def main():
     # Create the main window
     root = tk.Tk()
     root.title("code assistant")
-    root.geometry("700x650")
+    screen_width = root.winfo_screenwidth()
+    window_width = 700
+
+    # Position in top-right corner
+    root.geometry("{}x650+{}+0".format(window_width, screen_width - window_width))
+    #root.geometry("700x650")
 
     create_widgets(root)
     
@@ -36,7 +41,8 @@ def create_widgets(root):
    
     timestamp_to_iso_date_convertion_button.pack()
     split_by_comma_button.pack()
-    
+
+# #########
 # helper functions
 def split_lines(input_text_area):
     user_input = input_text_area.get("1.0", "end-1c")
@@ -47,7 +53,13 @@ def split_lines(input_text_area):
 def apply_for_all_items(lines, function): 
     output_list = []
     for line in lines:
-        output_list.append(function(line))
+        if not line:
+            output_list.append(line)
+            continue
+        try:
+            output_list.append(function(line))
+        except Exception as e:
+            output_list.append(f"Error: {e}")
     return output_list
 
 def plugin_entrance(plugin_function, input_text_area, output_text_area):
@@ -57,75 +69,38 @@ def plugin_entrance(plugin_function, input_text_area, output_text_area):
     output_text_area.delete("1.0", tk.END)
     output_text_area.insert("1.0", output_text)
 
-
-# actions for buttons
-
-def timestamp_to_iso_date_convertion_outdated(input_text_area, output_text_area):
-    user_input = input_text_area.get("1.0", "end-1c")
-    # split user input by linebreak 
-    user_input_list = user_input.split("\n")
-    converted_date = []
-    # convert each line to a timestamp
-    for line in user_input_list:
-        line = line.strip()  # Remove whitespace
-        if line:  # Skip empty lines
-            try:
-                timestamp = int(line)
-                # convert timestamp to iso date
-                iso_date = datetime.datetime.fromtimestamp(timestamp).isoformat()
-                converted_date.append(iso_date)
-            except ValueError:
-                converted_date.append(f"Invalid timestamp: {line}")
-    # join converted dates by linebreak
-    converted_date = "\n".join(converted_date)
-    # Clear the output area first, then insert the result
-    output_text_area.delete("1.0", tk.END)
-    output_text_area.insert("1.0", converted_date)
-    
-def timestamp_to_iso_date_convertion(input_text_area, output_text_area):
-    # split user input by linebreak 
-    user_input_list = split_lines(input_text_area)
-
-    converted_date = apply_for_all_items(user_input_list, lambda x: datetime.datetime.fromtimestamp(int(x)).isoformat())
-    
-    # join converted dates by linebreak
-    converted_date = "\n".join(converted_date)
-    # Clear the output area first, then insert the result
-    output_text_area.delete("1.0", tk.END)
-    output_text_area.insert("1.0", converted_date)
-
-def split_by_comma(input_text_area, output_text_area):
-    # split user input by comma
-    user_input_list = split_lines(input_text_area)
-    output_list = apply_for_all_items(user_input_list, lambda x: [item.strip() for item in x.split(",")])
-
-    print("output_list:", output_list)
-
-    # Flatten the nested array and remove empty entries
+def flatten_and_remove_empty_items(output_list):
     flattened_list = []
     for sublist in output_list:
         for item in sublist:
             if item:  # Only add non-empty items
                 flattened_list.append(item)
+    return flattened_list
 
-    print("flattened_list:", flattened_list)
-    # join output list by linebreak
-    output_text = "\n".join(flattened_list)
-    # Clear the output area first, then insert the result
-    #output_text_area.delete("1.0", tk.END)
-    output_text_area.insert("1.0", output_text)
-
-"""
+# #########
+# actions for buttons
+def timestamp_to_iso_date_convertion(user_input_list):
+    """
 12456
 23456321
 123456789
-"""
+    """
+    converted_date = apply_for_all_items(user_input_list, lambda x: datetime.datetime.fromtimestamp(int(x)).isoformat())
+    
+    return converted_date
 
-"""
+def split_by_comma(user_input_list):
+    """
 apple , banana , cherry
-  orange  ,  grape  ,  kiwi
-  citron,mango,pear,pineapple,
-"""
+orange  ,  grape  ,  kiwi
+citron,mango,pear,pineapple,
+    """
+    output_list = apply_for_all_items(user_input_list, lambda x: [item.strip() for item in x.split(",")])
+
+    flattened_list = flatten_and_remove_empty_items(output_list)
+
+    return flattened_list
+
 
 if __name__ == "__main__":
     main()
