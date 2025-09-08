@@ -1,5 +1,6 @@
 import datetime
 import tkinter as tk
+import tkinter.scrolledtext as scrolledtext
 
 def main():
     # Create the main window
@@ -26,10 +27,20 @@ def create_widgets(root):
     frame_buttons = tk.Frame(frame)
 
     # create an input text area
-    user_input_text_area = tk.Text(frame, height=35, width=30)
+    user_input_text_area = scrolledtext.ScrolledText(
+        frame, 
+        height=35, 
+        width=30,
+        wrap=tk.NONE
+    )
 
     # create an output text area
-    user_output_text_area = tk.Text(frame, height=35, width=30)
+    user_output_text_area = scrolledtext.ScrolledText(
+        frame, 
+        height=35, 
+        width=30,
+        wrap=tk.NONE
+    )
 
     # create a button
     timestamp_to_iso_date_convertion_button = tk.Button(frame_buttons, text="ISO date convertion", command=lambda: plugin_entrance(timestamp_to_iso_date_convertion, user_input_text_area, user_output_text_area))
