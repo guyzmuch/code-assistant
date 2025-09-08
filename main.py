@@ -79,10 +79,46 @@ def create_widgets(root):
     )
 
     # create the actionable buttons
-    timestamp_to_iso_date_convertion_button = tk.Button(frame_buttons, text="ISO date convertion", command=lambda: plugin_entrance(timestamp_to_iso_date_convertion, user_input_text_area, user_output_text_area))
-    split_by_comma_button = tk.Button(frame_buttons, text="Split by comma", command=lambda: plugin_entrance(split_by_comma, user_input_text_area, user_output_text_area))
-    copy_result_to_input_button = tk.Button(frame_output_buttons, text="⤾ result to input", command=lambda: copy_result_to_input(user_input_text_area, user_output_text_area))
-    copy_result_to_clipboard_button = tk.Button(frame_output_buttons, text=f"{copy_symbol} clipboard", command=lambda: pyperclip.copy(user_output_text_area.get("1.0", "end-1c")))
+    timestamp_to_iso_date_convertion_frame = tk.Frame(frame_buttons)
+    timestamp_to_iso_date_convertion_from_clipboard_button = tk.Button(
+        timestamp_to_iso_date_convertion_frame,
+        text=f"{copy_symbol}",
+        command=lambda: [
+            get_text_from_clipboard(user_input_text_area),
+            plugin_entrance(timestamp_to_iso_date_convertion, user_input_text_area, user_output_text_area)
+        ]
+    )
+    timestamp_to_iso_date_convertion_button = tk.Button(
+        timestamp_to_iso_date_convertion_frame,
+        text="ISO date convertion",
+        command=lambda: plugin_entrance(timestamp_to_iso_date_convertion, user_input_text_area, user_output_text_area)
+    )
+    
+    split_by_comma_frame = tk.Frame(frame_buttons)
+    split_by_comma_from_clipboard_button = tk.Button(
+        split_by_comma_frame,
+        text=f"{copy_symbol}",
+        command=lambda: [
+            get_text_from_clipboard(user_input_text_area),
+            plugin_entrance(split_by_comma, user_input_text_area, user_output_text_area)
+        ]
+    )
+    split_by_comma_button = tk.Button(
+        split_by_comma_frame,
+        text="Split by comma",
+        command=lambda: plugin_entrance(split_by_comma, user_input_text_area, user_output_text_area)
+    )
+    
+    copy_result_to_input_button = tk.Button(
+        frame_output_buttons, 
+        text="⤾ result to input", 
+        command=lambda: copy_result_to_input(user_input_text_area, user_output_text_area)
+    )
+    copy_result_to_clipboard_button = tk.Button(
+        frame_output_buttons, 
+        text=f"{copy_symbol} clipboard", 
+        command=lambda: pyperclip.copy(user_output_text_area.get("1.0", "end-1c"))
+    )
 
     frame_input.pack(side=tk.LEFT)
     frame_buttons.pack(side=tk.LEFT) 
@@ -90,8 +126,13 @@ def create_widgets(root):
 
     user_input_text_area.pack(fill=tk.BOTH, expand=True)
    
-    timestamp_to_iso_date_convertion_button.pack()
-    split_by_comma_button.pack()
+    timestamp_to_iso_date_convertion_frame.pack()
+    timestamp_to_iso_date_convertion_from_clipboard_button.pack(side=tk.LEFT)
+    timestamp_to_iso_date_convertion_button.pack(side=tk.LEFT)
+
+    split_by_comma_frame.pack()
+    split_by_comma_from_clipboard_button.pack(side=tk.LEFT)
+    split_by_comma_button.pack(side=tk.LEFT)
 
     user_output_text_area.pack(fill=tk.BOTH, expand=True)
     frame_output_buttons.pack()
@@ -107,6 +148,10 @@ def copy_result_to_input(input_text_area, output_text_area):
 
 # #########
 # helper functions
+def get_text_from_clipboard(input_text_area):
+    input_text_area.delete("1.0", tk.END)
+    input_text_area.insert("1.0", pyperclip.paste())
+
 def split_lines(input_text_area):
     user_input = input_text_area.get("1.0", "end-1c")
     # split user input by linebreak
