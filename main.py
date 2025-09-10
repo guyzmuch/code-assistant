@@ -1,7 +1,9 @@
-import datetime
 import tkinter as tk
 import tkinter.scrolledtext as scrolledtext
 import pyperclip
+
+from helpers import get_text_from_clipboard, plugin_entrance
+from plugins.plugins_loader import load_plugins
 
 
 boxed_letters = [
@@ -78,36 +80,32 @@ def create_widgets(root):
         wrap=tk.NONE
     )
 
-    # create the actionable buttons
-    timestamp_to_iso_date_convertion_frame = tk.Frame(frame_buttons)
-    timestamp_to_iso_date_convertion_from_clipboard_button = tk.Button(
-        timestamp_to_iso_date_convertion_frame,
-        text=f"{copy_symbol}",
-        command=lambda: [
-            get_text_from_clipboard(user_input_text_area),
-            plugin_entrance(timestamp_to_iso_date_convertion, user_input_text_area, user_output_text_area)
-        ]
-    )
-    timestamp_to_iso_date_convertion_button = tk.Button(
-        timestamp_to_iso_date_convertion_frame,
-        text="ISO date convertion",
-        command=lambda: plugin_entrance(timestamp_to_iso_date_convertion, user_input_text_area, user_output_text_area)
-    )
-    
-    split_by_comma_frame = tk.Frame(frame_buttons)
-    split_by_comma_from_clipboard_button = tk.Button(
-        split_by_comma_frame,
-        text=f"{copy_symbol}",
-        command=lambda: [
-            get_text_from_clipboard(user_input_text_area),
-            plugin_entrance(split_by_comma, user_input_text_area, user_output_text_area)
-        ]
-    )
-    split_by_comma_button = tk.Button(
-        split_by_comma_frame,
-        text="Split by comma",
-        command=lambda: plugin_entrance(split_by_comma, user_input_text_area, user_output_text_area)
-    )
+    plugins = load_plugins()
+    print("***** End of loading plugins: loaded ", len(plugins), " plugins")
+    for plugin in plugins:
+        # instantiate the plugin
+        plugin_instance = plugin()
+        # create a frame for the plugin
+        plugin_frame = tk.Frame(frame_buttons)
+        plugin_frame.pack()
+        print("Instanciated plugin: ", plugin_instance.get_name())
+        # create a button to directly run the plugin from the clipboard
+        plugin_from_clipboard_button = tk.Button(
+            plugin_frame,
+            text=f"{copy_symbol}",
+            command=lambda p=plugin_instance: [
+                get_text_from_clipboard(user_input_text_area),
+                plugin_entrance(p.run, user_input_text_area, user_output_text_area)
+            ]
+        )
+        plugin_from_clipboard_button.pack(side=tk.LEFT)
+        # create a button to run the plugin from the input
+        plugin_button = tk.Button(
+            plugin_frame,
+            text=plugin_instance.get_name(),
+            command=lambda p=plugin_instance: plugin_entrance(p.run, user_input_text_area, user_output_text_area)
+        )
+        plugin_button.pack(side=tk.LEFT)
     
     copy_result_to_input_button = tk.Button(
         frame_output_buttons, 
@@ -126,14 +124,6 @@ def create_widgets(root):
 
     user_input_text_area.pack(fill=tk.BOTH, expand=True)
    
-    timestamp_to_iso_date_convertion_frame.pack()
-    timestamp_to_iso_date_convertion_from_clipboard_button.pack(side=tk.LEFT)
-    timestamp_to_iso_date_convertion_button.pack(side=tk.LEFT)
-
-    split_by_comma_frame.pack()
-    split_by_comma_from_clipboard_button.pack(side=tk.LEFT)
-    split_by_comma_button.pack(side=tk.LEFT)
-
     user_output_text_area.pack(fill=tk.BOTH, expand=True)
     frame_output_buttons.pack()
     copy_result_to_input_button.pack(side=tk.LEFT)
@@ -145,69 +135,6 @@ def copy_result_to_input(input_text_area, output_text_area):
     output_text = output_text_area.get("1.0", "end-1c")
     input_text_area.delete("1.0", tk.END)
     input_text_area.insert("1.0", output_text)
-
-# #########
-# helper functions
-def get_text_from_clipboard(input_text_area):
-    input_text_area.delete("1.0", tk.END)
-    input_text_area.insert("1.0", pyperclip.paste())
-
-def split_lines(input_text_area):
-    user_input = input_text_area.get("1.0", "end-1c")
-    # split user input by linebreak
-    user_input_list = user_input.split("\n")
-    return user_input_list
-
-def apply_for_all_items(lines, function): 
-    output_list = []
-    for line in lines:
-        if not line:
-            output_list.append(line)
-            continue
-        try:
-            output_list.append(function(line))
-        except Exception as e:
-            output_list.append(f"Error: {e}")
-    return output_list
-
-def plugin_entrance(plugin_function, input_text_area, output_text_area):
-    user_input_list = split_lines(input_text_area)
-    output_list = plugin_function(user_input_list)
-    output_text = "\n".join(output_list)
-    output_text_area.delete("1.0", tk.END)
-    output_text_area.insert("1.0", output_text)
-
-def flatten_and_remove_empty_items(output_list):
-    flattened_list = []
-    for sublist in output_list:
-        for item in sublist:
-            if item:  # Only add non-empty items
-                flattened_list.append(item)
-    return flattened_list 
-
-# #########
-# actions for buttons
-def timestamp_to_iso_date_convertion(user_input_list):
-    """
-12456
-23456321
-123456789
-    """
-    converted_date = apply_for_all_items(user_input_list, lambda x: datetime.datetime.fromtimestamp(int(x)).isoformat())
-    
-    return converted_date
-
-def split_by_comma(user_input_list):
-    """
-apple , banana , cherry
-orange  ,  grape  ,  kiwi
-citron,mango,pear,pineapple,
-    """
-    output_list = apply_for_all_items(user_input_list, lambda x: [item.strip() for item in x.split(",")])
-
-    flattened_list = flatten_and_remove_empty_items(output_list)
-
-    return flattened_list
 
 
 if __name__ == "__main__":

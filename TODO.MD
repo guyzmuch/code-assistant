@@ -13,3 +13,4 @@ ability to select wich functionnality to show on the interface
 ## DONE
 buttons to copy the result
 button to move the result to the input
+plugins should be classes following a certain schematic
