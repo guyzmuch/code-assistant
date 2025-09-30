@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import ttk
 import tkinter.scrolledtext as scrolledtext
 import pyperclip
+import sqlite3
 
 from helpers import get_text_from_clipboard, plugin_entrance
 from plugins.plugins_loader import load_plugins
@@ -48,12 +49,49 @@ def main():
     # Position in top-right corner
     root.geometry("{}x650+{}+0".format(window_width, screen_width - window_width))
 
-    create_widgets(root)
-    
-    # Start the application
-    root.mainloop()
+    # Use context manager for database connection
+    with sqlite3.connect("plugins.db") as db_connection:
+        db_connection.row_factory = sqlite3.Row
+        cursor = db_connection.cursor()
+        # create a table to store the plugins
+        try:
+            cursor.execute("""
+            CREATE TABLE IF NOT EXISTS plugins (
+                id INTEGER PRIMARY KEY AUTOINCREMENT, 
+                name TEXT, 
+                activated INTEGER,
+                new_plugin INTEGER,
+                option INTEGER,
+                shortcut TEXT,
+                custom_name TEXT
+            )""")
+        
+            cursor.execute("""
+            CREATE TABLE IF NOT EXISTS plugin_history (
+                id INTEGER PRIMARY KEY AUTOINCREMENT, 
+                input TEXT, 
+                output TEXT,
+                plugin_name TEXT,
+                timestamp TEXT
+            )""")
+            db_connection.commit()  # Save on success
+        except Exception as e:
+            db_connection.rollback()  # Undo on error
+            print(f"Error: {e}")
 
-def create_widgets(root):
+        create_widgets(root, db_connection)
+        
+        # Bind the close event
+        def on_closing():
+            root.destroy()
+        
+        root.protocol("WM_DELETE_WINDOW", on_closing)
+        
+        # Start the application
+        root.mainloop()
+    # Database automatically closes when exiting the 'with' block
+
+def create_widgets(root, db_connection):
     # Create a frame to hold the grid
     main_container = ttk.Frame(root)
     main_container['padding'] = 10
@@ -91,11 +129,33 @@ def create_widgets(root):
         wrap=tk.NONE
     )
 
-    plugins = load_plugins()
+    plugins = load_plugins(db_connection)
     print("***** End of loading plugins: loaded ", len(plugins), " plugins")
-    for i, plugin in enumerate(plugins):
+    
+    # Create a dictionary mapping plugin names to plugin classes
+    plugins_dict = {}
+    for plugin_class in plugins:
+        plugin_name = plugin_class.__name__
+        plugins_dict[plugin_name] = plugin_class
+    
+    # get the plugins from the database
+    cursor = db_connection.cursor()
+    cursor.execute("SELECT * FROM plugins WHERE activated = 1")
+    plugins_from_database = cursor.fetchall()
+    
+    i = 0 # counter for the grid
+
+    for plugin_from_database in plugins_from_database:
+        if plugin_from_database['name'] not in plugins_dict:
+            print("Plugin from database not found in plugins: ", plugin_from_database['name'])
+            continue
+        
         # instantiate the plugin
-        plugin_instance = plugin()
+        plugin_instance = plugins_dict[plugin_from_database['name']]()
+        plugin_instance.option = plugin_from_database['option']
+        plugin_instance.shortcut = plugin_from_database['shortcut']
+        plugin_instance.custom_name = plugin_from_database['custom_name']
+  
 
         print("Instanciated plugin: ", plugin_instance.get_name())
         # create a button to directly run the plugin from the clipboard
@@ -116,6 +176,7 @@ def create_widgets(root):
             command=lambda p=plugin_instance: plugin_entrance(p.run, user_input_text_area, user_output_text_area)
         )
         plugin_button.grid(row=i, column=1, sticky="ew", padx=(0, 5))
+        i += 1
         
         # Force buttons to expand to fill available space
         plugin_from_clipboard_button.configure(width=2)
