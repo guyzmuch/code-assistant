@@ -3,6 +3,7 @@ import json
 
 from plugins.plugin import Plugin
 from utils.format import format_error, format_section
+from utils.text import first_non_empty_line
 
 
 def _decode_jwt_part(segment: str) -> dict:
@@ -57,14 +58,8 @@ class DecodeJwt(Plugin):
         """
         eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.signature
         """
-        if not user_input_list:
-            return [format_error("no input provided")]
-
-        token = user_input_list[0]
-        if not token.strip():
-            return [format_error("first line is empty")]
-
         try:
+            token = first_non_empty_line(user_input_list)
             return [_format_jwt(token, self.options)]
-        except Exception as e:
+        except ValueError as e:
             return [format_error(str(e))]

@@ -1,4 +1,33 @@
-from utils.text import apply_for_all_lines, flatten_and_remove_empty_lines
+import pytest
+
+from utils.text import (
+    apply_for_all_lines,
+    first_non_empty_line,
+    flatten_and_remove_empty_lines,
+    require_input,
+)
+
+
+class TestRequireInput:
+    def test_passes_when_lines_exist(self):
+        require_input(["a"])
+
+    def test_raises_when_input_is_empty(self):
+        with pytest.raises(ValueError, match="no input provided"):
+            require_input([])
+
+
+class TestFirstNonEmptyLine:
+    def test_returns_first_non_empty_line(self):
+        assert first_non_empty_line(["", "  a  ", "b"]) == "  a  "
+
+    def test_raises_when_input_is_empty(self):
+        with pytest.raises(ValueError, match="no input provided"):
+            first_non_empty_line([])
+
+    def test_raises_when_all_lines_are_empty(self):
+        with pytest.raises(ValueError, match="no non-empty line found"):
+            first_non_empty_line(["", "   "])
 
 
 class TestApplyForAllLines:

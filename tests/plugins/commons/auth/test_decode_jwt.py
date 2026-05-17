@@ -51,12 +51,18 @@ class TestDecodeJwt:
         assert "--- ERROR" in result
         assert "no input provided" in result
 
-    def test_empty_first_line_returns_error(self):
+    def test_empty_lines_return_error(self):
         plugin = DecodeJwt()
         result = plugin.run(["   "])[0]
 
         assert "--- ERROR" in result
-        assert "first line is empty" in result
+        assert "no non-empty line found" in result
+
+    def test_uses_first_non_empty_line(self):
+        plugin = DecodeJwt()
+        result = plugin.run(["", "  ", SAMPLE_JWT])[0]
+
+        assert '"sub": "1234567890"' in result
 
     def test_invalid_token_returns_error(self):
         plugin = DecodeJwt()
