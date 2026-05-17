@@ -64,3 +64,18 @@ class TestDecodeJwt:
 
         assert "--- ERROR" in result
         assert "Invalid JWT" in result
+
+    def test_payload_only_returns_payload_without_sections(self):
+        plugin = DecodeJwt(options='{"payload_only": true}')
+        result = plugin.run([SAMPLE_JWT])[0]
+
+        assert result == EXPECTED_PAYLOAD_JSON
+        assert "--- HEADER" not in result
+        assert "--- PAYLOAD" not in result
+
+    def test_compact_json_when_pretty_disabled(self):
+        plugin = DecodeJwt(options='{"pretty": false}')
+        result = plugin.run([SAMPLE_JWT])[0]
+
+        assert result.split("\n--- PAYLOAD\n", 1)[1] == '{"sub":"1234567890"}'
+        assert "\n  " not in result
