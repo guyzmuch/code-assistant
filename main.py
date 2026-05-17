@@ -4,7 +4,8 @@ import tkinter.scrolledtext as scrolledtext
 import pyperclip
 import sqlite3
 
-from helpers import get_text_from_clipboard, plugin_entrance
+from utils.ui import get_text_from_clipboard
+from utils.plugins import plugin_entrance
 from plugins.plugins_loader import load_plugins
 
 

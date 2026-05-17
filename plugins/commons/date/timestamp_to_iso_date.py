@@ -1,5 +1,5 @@
 from plugins.plugin import Plugin
-from helpers import apply_for_all_lines
+from utils.text import apply_for_all_lines
 import datetime
 
 class TimestampToIsoDate(Plugin):

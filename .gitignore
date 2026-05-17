@@ -1,3 +1,6 @@
 __pycache__/
 venv/
 plugins.db
+
+temp.txt
+TODO.md
