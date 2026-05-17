@@ -1,12 +1,31 @@
+import datetime
+from zoneinfo import ZoneInfo
+
 from plugins.plugin import Plugin
 from utils.text import apply_for_all_lines
-import datetime
+
 
 class TimestampToIsoDate(Plugin):
     DEFAULT_NAME = "Timestamp to ISO date"
+    DEFAULT_OPTIONS = {"timezone": "local", "hide_offset": True}
 
     def get_description(self):
         return "Convert timestamp to ISO date"
+
+    def _format_datetime(self, dt):
+        if self.options["hide_offset"] and dt.tzinfo is not None:
+            dt = dt.replace(tzinfo=None)
+        return dt.isoformat()
+
+    def _timestamp_to_iso(self, value):
+        timestamp = int(value)
+        timezone = self.options["timezone"]
+
+        if timezone in (None, "", "local"):
+            return datetime.datetime.fromtimestamp(timestamp).isoformat()
+
+        dt = datetime.datetime.fromtimestamp(timestamp, tz=ZoneInfo(timezone))
+        return self._format_datetime(dt)
 
     def run(self, user_input_list):
         """
@@ -14,9 +33,4 @@ class TimestampToIsoDate(Plugin):
         23456321
         123456789
         """
-        converted_date = apply_for_all_lines(
-            user_input_list,
-            lambda x: datetime.datetime.fromtimestamp(int(x)).isoformat()
-        )
-
-        return converted_date
+        return apply_for_all_lines(user_input_list, self._timestamp_to_iso)
