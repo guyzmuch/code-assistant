@@ -40,6 +40,7 @@ boxed_letters = [
 
 copy_symbol = "📋"
 
+
 def main():
     # Create the main window
     root = tk.Tk()
@@ -62,11 +63,11 @@ def main():
                 name TEXT, 
                 activated INTEGER,
                 new_plugin INTEGER,
-                option INTEGER,
+                options TEXT,
                 shortcut TEXT,
                 custom_name TEXT
             )""")
-        
+
             cursor.execute("""
             CREATE TABLE IF NOT EXISTS plugin_history (
                 id INTEGER PRIMARY KEY AUTOINCREMENT, 
@@ -151,12 +152,11 @@ def create_widgets(root, db_connection):
             print("Plugin from database not found in plugins: ", plugin_from_database['name'])
             continue
         
-        # instantiate the plugin
-        plugin_instance = plugins_dict[plugin_from_database['name']]()
-        plugin_instance.option = plugin_from_database['option']
-        plugin_instance.shortcut = plugin_from_database['shortcut']
-        plugin_instance.custom_name = plugin_from_database['custom_name']
-  
+        plugin_instance = plugins_dict[plugin_from_database['name']](
+            custom_name=plugin_from_database['custom_name'],
+            options=plugin_from_database['options'],
+            shortcut=plugin_from_database['shortcut'],
+        )
 
         print("Instanciated plugin: ", plugin_instance.get_name())
         # create a button to directly run the plugin from the clipboard

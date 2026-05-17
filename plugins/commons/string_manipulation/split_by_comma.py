@@ -3,9 +3,8 @@ from utils.text import apply_for_all_lines, flatten_and_remove_empty_lines
 
 
 class SplitByComma(Plugin):
-    def get_name(self):
-        return "Split by comma"
-    
+    DEFAULT_NAME = "Split by comma"
+
     def get_description(self):
         return "Split text by comma and flatten the result"
     

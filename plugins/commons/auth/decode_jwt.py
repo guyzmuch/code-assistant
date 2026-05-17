@@ -37,8 +37,7 @@ def _format_jwt(token: str) -> str:
 
 
 class DecodeJwt(Plugin):
-    def get_name(self):
-        return "Decode JWT"
+    DEFAULT_NAME = "Decode JWT"
 
     def get_description(self):
         return "Decode JWT header and payload from the first input line"

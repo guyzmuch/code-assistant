@@ -2,8 +2,7 @@ from plugins.plugin import Plugin
 
 
 class JoinByComma(Plugin):
-    def get_name(self):
-        return "Join by comma"
+    DEFAULT_NAME = "Join by comma"
 
     def get_description(self):
         return "Strip each line and join non-empty lines with a comma"

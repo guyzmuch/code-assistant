@@ -30,7 +30,7 @@ def load_plugins(db_connection):
                         plugin_from_database = cursor.fetchone()
                         print(f"plugin_from_database: {plugin_from_database}")
                         if not plugin_from_database:
-                            cursor.execute("INSERT INTO plugins (name, activated, new_plugin, option, shortcut, custom_name) VALUES (?, ?, ?, ?, ?, ?)", (attr.__name__, 1, 1, 0, "", ""))
+                            cursor.execute("INSERT INTO plugins (name, activated, new_plugin, options, shortcut, custom_name) VALUES (?, ?, ?, ?, ?, ?)", (attr.__name__, 1, 1, "{}", "", ""))
                         db_connection.commit()
 
     return plugins

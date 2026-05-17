@@ -3,9 +3,8 @@ from utils.text import apply_for_all_lines
 import datetime
 
 class TimestampToIsoDate(Plugin):
-    def get_name(self):
-        return "Timestamp to ISO date"
-    
+    DEFAULT_NAME = "Timestamp to ISO date"
+
     def get_description(self):
         return "Convert timestamp to ISO date"
     
