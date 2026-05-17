@@ -42,9 +42,6 @@ class DecodeJwt(Plugin):
     def get_description(self):
         return "Decode JWT header and payload from the first input line"
 
-    def get_options(self):
-        return {}
-
     def run(self, user_input_list):
         """
         eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.signature

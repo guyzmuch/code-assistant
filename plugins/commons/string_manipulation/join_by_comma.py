@@ -7,9 +7,6 @@ class JoinByComma(Plugin):
     def get_description(self):
         return "Strip each line and join non-empty lines with a comma"
 
-    def get_options(self):
-        return {}
-
     def run(self, user_input_list):
         """
         apple

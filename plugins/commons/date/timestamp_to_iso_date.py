@@ -7,10 +7,7 @@ class TimestampToIsoDate(Plugin):
 
     def get_description(self):
         return "Convert timestamp to ISO date"
-    
-    def get_options(self):
-        return {}
-    
+
     def run(self, user_input_list):
         """
         12456

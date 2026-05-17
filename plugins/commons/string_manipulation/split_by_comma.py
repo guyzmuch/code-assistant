@@ -7,10 +7,7 @@ class SplitByComma(Plugin):
 
     def get_description(self):
         return "Split text by comma and flatten the result"
-    
-    def get_options(self):
-        return {}  # No options for this plugin
-    
+
     def run(self, user_input_list):
         """
         apple , banana , cherry
