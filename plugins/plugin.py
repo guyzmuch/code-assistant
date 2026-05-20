@@ -7,6 +7,8 @@ class Plugin(ABC):
     DEFAULT_OPTIONS = {}
 
     def __init_subclass__(cls, **kwargs):
+        # Runs when a subclass is defined (import time). Every plugin must set
+        # DEFAULT_NAME so the loader/UI can identify it; fail early, not at runtime.
         super().__init_subclass__(**kwargs)
         if cls.DEFAULT_NAME is None:
             raise TypeError(f"{cls.__name__} must define DEFAULT_NAME")
