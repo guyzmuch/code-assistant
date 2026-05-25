@@ -38,6 +38,12 @@ class Plugin(ABC):
     def get_name(self):
         return self.name
 
+    def get_default_name(self):
+        return type(self).DEFAULT_NAME
+
+    def get_options(self):
+        return self.options
+
     @abstractmethod
     def get_description(self):
         """Return the plugin description. Must be implemented by child classes."""

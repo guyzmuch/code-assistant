@@ -42,9 +42,10 @@ def populate_plugin_buttons(layout: MainLayout, db_connection):
             command=lambda p=plugin_instance: [
                 get_text_from_clipboard(layout.user_input_text_area),
                 plugin_entrance(
-                    p.run,
+                    p,
                     layout.user_input_text_area,
                     layout.user_output_text_area,
+                    db_connection,
                 ),
             ],
         )
@@ -56,9 +57,10 @@ def populate_plugin_buttons(layout: MainLayout, db_connection):
             layout.frame_buttons,
             text=plugin_instance.get_name(),
             command=lambda p=plugin_instance: plugin_entrance(
-                p.run,
+                p,
                 layout.user_input_text_area,
                 layout.user_output_text_area,
+                db_connection,
             ),
         )
         plugin_button.grid(row=row, column=1, sticky="ew", padx=(0, 5))

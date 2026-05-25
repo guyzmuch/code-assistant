@@ -25,6 +25,8 @@ def init_schema(db_connection):
             input TEXT,
             output TEXT,
             plugin_name TEXT,
+            label TEXT,
+            configuration TEXT,
             timestamp TEXT
         )""")
         db_connection.commit()
