@@ -7,6 +7,20 @@ from utils.ui import get_text_from_clipboard
 from views.main_layout import MainLayout
 
 
+def make_plugin_command(plugin, layout, db_connection, *, from_clipboard=False):
+    def run():
+        if from_clipboard:
+            get_text_from_clipboard(layout.user_input_text_area)
+        plugin_entrance(
+            plugin,
+            layout.user_input_text_area,
+            layout.user_output_text_area,
+            db_connection,
+        )
+
+    return run
+
+
 def populate_plugin_buttons(layout: MainLayout, db_connection):
     plugins = load_plugins(db_connection)
     print("***** End of loading plugins: loaded ", len(plugins), " plugins")
@@ -36,35 +50,30 @@ def populate_plugin_buttons(layout: MainLayout, db_connection):
 
         print("Instanciated plugin: ", plugin_instance.get_name())
 
+        # Set up the "from clipboard" button
+        run_plugin_from_clipboard = make_plugin_command(
+            plugin_instance, layout, db_connection, from_clipboard=True
+        )
+
         plugin_from_clipboard_button = ttk.Button(
             layout.frame_buttons,
-            text=f"{COPY_SYMBOL}",
-            command=lambda p=plugin_instance: [
-                get_text_from_clipboard(layout.user_input_text_area),
-                plugin_entrance(
-                    p,
-                    layout.user_input_text_area,
-                    layout.user_output_text_area,
-                    db_connection,
-                ),
-            ],
+            text=COPY_SYMBOL,
+            command=run_plugin_from_clipboard,
         )
         plugin_from_clipboard_button.grid(
             row=row, column=0, sticky="ew", padx=(5, 5)
         )
+        plugin_from_clipboard_button.configure(width=2)
 
+        # Set up the "from input" button
+        run_plugin = make_plugin_command(
+            plugin_instance, layout, db_connection
+        )
         plugin_button = ttk.Button(
             layout.frame_buttons,
             text=plugin_instance.get_name(),
-            command=lambda p=plugin_instance: plugin_entrance(
-                p,
-                layout.user_input_text_area,
-                layout.user_output_text_area,
-                db_connection,
-            ),
+            command=run_plugin,
         )
         plugin_button.grid(row=row, column=1, sticky="ew", padx=(0, 5))
-        row += 1
-
-        plugin_from_clipboard_button.configure(width=2)
         plugin_button.configure(width=15)
+        row += 1
