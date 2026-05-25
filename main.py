@@ -1,15 +1,10 @@
-import tkinter as tk
-
 from app.main_view import create_main_view
+from app.window import create_root_window
 from database.connection import database_connection
 
 
 def main():
-    root = tk.Tk()
-    root.title("Dev assistant")
-    screen_width = root.winfo_screenwidth()
-    window_width = 700
-    root.geometry("{}x650+{}+0".format(window_width, screen_width - window_width))
+    root = create_root_window()
 
     with database_connection() as db_connection:
         create_main_view(root, db_connection)

@@ -1,7 +1,7 @@
 from tkinter import ttk
 
 from app.constants import COPY_SYMBOL
-from plugins.plugins_loader import load_plugins
+from app.plugins_loader import load_plugins
 from utils.plugins import plugin_entrance
 from utils.ui import get_text_from_clipboard
 from views.main_layout import MainLayout
