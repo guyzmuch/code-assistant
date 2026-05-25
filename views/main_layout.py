@@ -7,46 +7,52 @@ from tkinter import ttk
 
 from app.actions import copy_result_to_input
 from app.constants import COPY_SYMBOL
+from app.window import PLUGIN_PANEL_WIDTH
 
 
 @dataclass
 class MainLayout:
-    main_container: ttk.Frame
+    main_paned: ttk.Panedwindow
+    frame_input: ttk.Frame
     frame_buttons: ttk.Frame
+    frame_output: ttk.Frame
     frame_output_buttons: ttk.Frame
     user_input_text_area: scrolledtext.ScrolledText
     user_output_text_area: scrolledtext.ScrolledText
 
 
-def create_main_layout(root) -> MainLayout:
-    main_container = ttk.Frame(root)
-    main_container["padding"] = 10
-    main_container.pack(side="top", fill="both", expand=True)
+def create_main_layout(paned_parent: ttk.Panedwindow) -> MainLayout:
+    frame_input = ttk.Frame(paned_parent, padding=10)
+    frame_buttons = ttk.Frame(
+        paned_parent, width=PLUGIN_PANEL_WIDTH, padding=(0, 10)
+    )
+    frame_buttons.grid_propagate(False)
+    frame_output = ttk.Frame(paned_parent, padding=10)
 
-    main_container.columnconfigure(0, weight=3)
-    main_container.columnconfigure(1, weight=2)
-    main_container.columnconfigure(2, weight=3)
+    paned_parent.add(frame_input, weight=1)
+    paned_parent.add(frame_buttons, weight=0)
+    paned_parent.add(frame_output, weight=1)
 
-    main_container.rowconfigure(0, weight=10)
-    main_container.rowconfigure(1, weight=1)
-    main_container.rowconfigure(2, weight=1)
+    frame_input.rowconfigure(0, weight=1)
+    frame_input.columnconfigure(0, weight=1)
+    frame_buttons.columnconfigure(0, weight=0)
+    frame_buttons.columnconfigure(1, weight=1)
+    frame_output.rowconfigure(0, weight=1)
+    frame_output.rowconfigure(1, weight=0)
+    frame_output.columnconfigure(0, weight=1)
 
-    frame_buttons = ttk.Frame(main_container)
-    frame_buttons.columnconfigure(0, weight=1)
-    frame_buttons.columnconfigure(1, weight=10)
-
-    frame_output_buttons = ttk.Frame(main_container)
+    frame_output_buttons = ttk.Frame(frame_output)
     frame_output_buttons["padding"] = 5
 
     user_input_text_area = scrolledtext.ScrolledText(
-        main_container,
+        frame_input,
         height=35,
         width=30,
         wrap=tk.NONE,
     )
 
     user_output_text_area = scrolledtext.ScrolledText(
-        main_container,
+        frame_output,
         height=35,
         width=30,
         wrap=tk.NONE,
@@ -70,14 +76,27 @@ def create_main_layout(root) -> MainLayout:
     copy_result_to_clipboard_button.pack(side=tk.LEFT, fill=tk.X, expand=True)
 
     user_input_text_area.grid(row=0, column=0, sticky="nsew")
-    frame_buttons.grid(row=0, column=1, sticky="nsew")
-    user_output_text_area.grid(row=0, column=2, sticky="nsew")
-    frame_output_buttons.grid(row=1, column=2, sticky="nsew")
+    user_output_text_area.grid(row=0, column=0, sticky="nsew")
+    frame_output_buttons.grid(row=1, column=0, sticky="ew")
 
     return MainLayout(
-        main_container=main_container,
+        main_paned=paned_parent,
+        frame_input=frame_input,
         frame_buttons=frame_buttons,
+        frame_output=frame_output,
         frame_output_buttons=frame_output_buttons,
         user_input_text_area=user_input_text_area,
         user_output_text_area=user_output_text_area,
     )
+
+
+def set_initial_main_sash_positions(main_paned: ttk.Panedwindow):
+    """Place plugin column at PLUGIN_PANEL_WIDTH; input/output share the rest."""
+    main_paned.update_idletasks()
+    width = main_paned.winfo_width()
+    if width <= 1:
+        return
+    remaining = width - PLUGIN_PANEL_WIDTH
+    input_width = remaining // 2
+    main_paned.sashpos(0, input_width)
+    main_paned.sashpos(1, input_width + PLUGIN_PANEL_WIDTH)
