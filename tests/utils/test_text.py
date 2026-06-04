@@ -5,6 +5,7 @@ from utils.text import (
     first_non_empty_line,
     flatten_and_remove_empty_lines,
     require_input,
+    merge_lines_into_one,
 )
 
 
@@ -28,6 +29,19 @@ class TestFirstNonEmptyLine:
     def test_raises_when_all_lines_are_empty(self):
         with pytest.raises(ValueError, match="no non-empty line found"):
             first_non_empty_line(["", "   "])
+
+
+class TestMergeLinesIntoOne:
+    def test_joins_and_strips_lines(self):
+        assert merge_lines_into_one(["  {", '"a": 1', "}  "]) == '{\n"a": 1\n}'
+
+    def test_raises_when_input_is_empty(self):
+        with pytest.raises(ValueError, match="no input provided"):
+            merge_lines_into_one([])
+
+    def test_raises_when_all_lines_are_whitespace(self):
+        with pytest.raises(ValueError, match="no non-empty input found"):
+            merge_lines_into_one(["", "   "])
 
 
 class TestApplyForAllLines:

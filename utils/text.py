@@ -11,6 +11,14 @@ def first_non_empty_line(lines):
     raise ValueError("no non-empty line found")
 
 
+def merge_lines_into_one(lines):
+    require_input(lines)
+    text = "\n".join(lines).strip()
+    if not text:
+        raise ValueError("no non-empty input found")
+    return text
+
+
 def apply_for_all_lines(lines, function):
     output_list = []
     for line in lines:

@@ -2,7 +2,7 @@ import base64
 import json
 
 from plugins.plugin import Plugin
-from utils.format import format_error, format_section
+from utils.format import format_error, format_section, json_dumps
 from utils.text import first_non_empty_line
 
 
@@ -10,12 +10,6 @@ def _decode_jwt_part(segment: str) -> dict:
     padding = "=" * (-len(segment) % 4)
     decoded = base64.urlsafe_b64decode(segment + padding)
     return json.loads(decoded)
-
-
-def _json_dumps(data: dict, pretty: bool) -> str:
-    if pretty:
-        return json.dumps(data, indent=2, sort_keys=True)
-    return json.dumps(data, sort_keys=True, separators=(",", ":"))
 
 
 def _format_jwt(token: str, options: dict) -> str:
@@ -32,11 +26,11 @@ def _format_jwt(token: str, options: dict) -> str:
     pretty = options["pretty"]
     payload_only = options["payload_only"]
 
-    payload_json = _json_dumps(payload, pretty)
+    payload_json = json_dumps(payload, pretty)
     if payload_only:
         return payload_json
 
-    header_json = _json_dumps(header, pretty)
+    header_json = json_dumps(header, pretty)
     return "\n".join(
         [
             format_section("HEADER"),
