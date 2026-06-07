@@ -9,6 +9,12 @@ from app.actions import copy_result_to_input
 from app.constants import COPY_SYMBOL
 
 
+def _configure_diff_output_tags(text_widget: scrolledtext.ScrolledText) -> None:
+    text_widget.tag_configure("diff_added", foreground="#2e7d32")
+    text_widget.tag_configure("diff_removed", foreground="#c62828")
+    text_widget.tag_configure("diff_context", foreground="#424242")
+
+
 @dataclass
 class MainLayout:
     main_container: ttk.Frame
@@ -51,6 +57,7 @@ def create_main_layout(root) -> MainLayout:
         width=30,
         wrap=tk.NONE,
     )
+    _configure_diff_output_tags(user_output_text_area)
 
     copy_result_to_input_button = ttk.Button(
         frame_output_buttons,
