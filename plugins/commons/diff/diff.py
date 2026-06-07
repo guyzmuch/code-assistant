@@ -7,45 +7,87 @@ from plugins.plugin import Plugin
 from utils.format import format_error
 from utils.text import require_input
 
-_DIFF_HEADER_PREFIXES = ("---", "+++", "@@")
+_DIFF_CONTEXT = 3
+# Single-digit line numbers only: aligns " 1:1  ", "-2    ", "+2    ".
+_LINE_PREFIX_WIDTH = 6
 
 
-def _unified_diff_lines(left: list[str], right: list[str]) -> list[str]:
-    return list(
-        difflib.unified_diff(
-            left,
-            right,
-            fromfile="input",
-            tofile="clipboard",
-            lineterm="",
-        )
-    )
+def _format_prefix(
+    left_num: int | None, right_num: int | None, tag: str
+) -> str:
+    if tag == "diff_context":
+        prefix = f" {left_num}:{right_num}  "
+    elif tag == "diff_removed":
+        prefix = f"-{left_num}  "
+    else:
+        prefix = f"+{right_num}  "
+    return prefix.ljust(_LINE_PREFIX_WIDTH)
 
 
-def _content_lines(diff_lines: list[str]) -> list[str]:
-    return [
-        line
-        for line in diff_lines
-        if not line.startswith(_DIFF_HEADER_PREFIXES)
+def _format_segment(
+    left_num: int | None,
+    right_num: int | None,
+    line: str,
+    tag: str,
+) -> tuple[str, str]:
+    return (f"{_format_prefix(left_num, right_num, tag)}{line}\n", tag)
+
+
+def _collect_segments(left: list[str], right: list[str]) -> list[tuple[int | None, int | None, str, str]]:
+    matcher = difflib.SequenceMatcher(a=left, b=right)
+    segments: list[tuple[int | None, int | None, str, str]] = []
+    left_num = 1
+    right_num = 1
+
+    for tag, i1, i2, j1, j2 in matcher.get_opcodes():
+        if tag == "equal":
+            for line in left[i1:i2]:
+                segments.append((left_num, right_num, line, "diff_context"))
+                left_num += 1
+                right_num += 1
+        elif tag == "delete":
+            for line in left[i1:i2]:
+                segments.append((left_num, None, line, "diff_removed"))
+                left_num += 1
+        elif tag == "insert":
+            for line in right[j1:j2]:
+                segments.append((None, right_num, line, "diff_added"))
+                right_num += 1
+        elif tag == "replace":
+            for line in left[i1:i2]:
+                segments.append((left_num, None, line, "diff_removed"))
+                left_num += 1
+            for line in right[j1:j2]:
+                segments.append((None, right_num, line, "diff_added"))
+                right_num += 1
+
+    return segments
+
+
+def _apply_context(
+    segments: list[tuple[int | None, int | None, str, str]], context: int = _DIFF_CONTEXT
+) -> list[tuple[int | None, int | None, str, str]]:
+    change_indices = [
+        index for index, segment in enumerate(segments) if segment[3] != "diff_context"
     ]
+    if not change_indices:
+        return []
 
+    visible = set()
+    for change_index in change_indices:
+        start = max(0, change_index - context)
+        end = min(len(segments), change_index + context + 1)
+        visible.update(range(start, end))
 
-def _line_tag(line: str) -> str | None:
-    if line.startswith("+"):
-        return "diff_added"
-    if line.startswith("-"):
-        return "diff_removed"
-    if line.startswith(" "):
-        return "diff_context"
-    return None
+    return [segments[index] for index in sorted(visible)]
 
 
 def build_diff_segments(left: list[str], right: list[str]) -> list[tuple[str, str | None]]:
-    segments = []
-    raw_difflib_result = _unified_diff_lines(left, right)
-    for line in _content_lines(raw_difflib_result):
-        segments.append((f"{line}\n", _line_tag(line)))
-    return segments
+    visible = _apply_context(_collect_segments(left, right))
+    return [
+        _format_segment(left_num, right_num, line, tag)
+        for left_num, right_num, line, tag in visible
+    ]
 
 
 def write_diff_to_text_widget(
@@ -64,7 +106,7 @@ class Diff(Plugin):
     DEFAULT_NAME = "Diff"
 
     def get_description(self):
-        return "Diff input against the clipboard (unified diff)"
+        return "Diff input against the clipboard with line numbers (input:clipboard)"
 
     def run(self, user_input_list):
         try:
