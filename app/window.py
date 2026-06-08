@@ -1,4 +1,5 @@
 import tkinter as tk
+from tkinterdnd2 import TkinterDnD
 
 WINDOW_TITLE = "Dev assistant"
 WINDOW_HEIGHT = 650
@@ -11,7 +12,7 @@ def screen_width(root) -> int:
 
 
 def create_root_window():
-    root = tk.Tk()
+    root = TkinterDnD.Tk()
     root.title(WINDOW_TITLE)
 
     x = screen_width(root) - COMPACT_WINDOW_WIDTH

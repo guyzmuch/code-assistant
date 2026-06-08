@@ -12,6 +12,7 @@ from app.constants import (
     EXPAND_OUTPUT_SYMBOL,
 )
 from app.window import PLUGIN_PANEL_WIDTH
+from utils.text_drop import setup_text_drop_target
 
 
 @dataclass
@@ -115,6 +116,7 @@ def create_main_layout(paned_parent: ttk.Panedwindow) -> MainLayout:
     copy_result_to_input_button.pack(side=tk.LEFT, fill=tk.X, expand=True)
     copy_result_to_clipboard_button.pack(side=tk.LEFT, fill=tk.X, expand=True)
 
+    setup_text_drop_target(user_input_text_area)
     user_input_text_area.grid(row=0, column=0, sticky="nsew")
     user_output_text_area.grid(row=0, column=0, sticky="nsew")
     frame_output_buttons.grid(row=1, column=0, sticky="ew")
