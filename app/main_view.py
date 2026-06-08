@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 
+from app.context import init as init_app_context
 from app.menu import create_app_menu
 from app.plugin_panel import populate_plugin_buttons
 from app.window import (
@@ -13,8 +14,6 @@ from views.main_layout import create_main_layout, set_initial_main_sash_position
 
 
 def create_main_view(root, db_connection):
-    history_visible = {"value": False}
-
     body_frame = ttk.Frame(root)
     body_frame.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 
@@ -29,29 +28,24 @@ def create_main_view(root, db_connection):
 
     layout = create_main_layout(main_paned)
     history_panel = HistoryPanel(
-        outer_paned, db_connection, layout.user_input_text_area
+        outer_paned, layout.user_input_text_area
     )
+    ctx = init_app_context(db_connection, layout, history_panel)
 
     def toggle_history():
-        if history_visible["value"]:
+        if ctx.history_visible:
             outer_paned.forget(history_panel)
             set_window_compact_top_right(root)
-            history_visible["value"] = False
+            ctx.history_visible = False
         else:
             outer_paned.insert(0, history_panel, weight=1)
             set_window_full_width(root)
             root.update_idletasks()
             history_panel.refresh()
-            history_visible["value"] = True
-
-    def refresh_history_if_visible():
-        if history_visible["value"]:
-            history_panel.refresh()
+            ctx.history_visible = True
 
     create_app_menu(root, on_quit=root.destroy, on_history=toggle_history)
-    populate_plugin_buttons(
-        layout, db_connection, on_after_run=refresh_history_if_visible
-    )
+    populate_plugin_buttons()
 
     root.update_idletasks()
     set_initial_main_sash_positions(main_paned)

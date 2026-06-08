@@ -3,6 +3,7 @@ import tkinter.font as tkfont
 from tkinter import ttk
 
 from app.actions import paste_text_to_input
+from app.context import get
 from database.plugin_history import fetch_recent_plugin_history, history_row_title
 
 HISTORY_ENTRY_LIMIT = 10
@@ -19,9 +20,8 @@ EXPANDED_INDICATOR = "▼"
 
 
 class HistoryPanel(ttk.Frame):
-    def __init__(self, parent, db_connection, input_text_area, **kwargs):
+    def __init__(self, parent, input_text_area, **kwargs):
         super().__init__(parent, **kwargs)
-        self._db_connection = db_connection
         self._input_text_area = input_text_area
         self._rows = []
         self._expanded_record_id = None
@@ -147,7 +147,7 @@ class HistoryPanel(ttk.Frame):
         self._set_readonly_text(self._detail_frame["output"]["widget"], "")
 
         records = fetch_recent_plugin_history(
-            self._db_connection, limit=HISTORY_ENTRY_LIMIT
+            get().db_connection, limit=HISTORY_ENTRY_LIMIT
         )
         if not records:
             tk.Label(
