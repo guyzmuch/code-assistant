@@ -4,7 +4,7 @@ from tkinter import ttk
 from app.menu import create_app_menu
 from app.plugin_panel import populate_plugin_buttons
 from app.window import (
-    DEFAULT_HISTORY_SASH_WIDTH,
+    COMPACT_WINDOW_WIDTH,
     set_window_compact_top_right,
     set_window_full_width,
 )
@@ -21,8 +21,11 @@ def create_main_view(root, db_connection):
     outer_paned = ttk.Panedwindow(body_frame, orient=tk.HORIZONTAL)
     outer_paned.pack(fill=tk.BOTH, expand=True)
 
-    main_paned = ttk.Panedwindow(outer_paned, orient=tk.HORIZONTAL)
-    outer_paned.add(main_paned, weight=1)
+    main_wrapper = ttk.Frame(outer_paned, width=COMPACT_WINDOW_WIDTH)
+    main_wrapper.pack_propagate(False)
+    main_paned = ttk.Panedwindow(main_wrapper, orient=tk.HORIZONTAL)
+    main_paned.pack(fill=tk.BOTH, expand=True)
+    outer_paned.add(main_wrapper, weight=0)
 
     layout = create_main_layout(main_paned)
     history_panel = HistoryPanel(
@@ -38,7 +41,6 @@ def create_main_view(root, db_connection):
             outer_paned.insert(0, history_panel, weight=1)
             set_window_full_width(root)
             root.update_idletasks()
-            outer_paned.sashpos(0, DEFAULT_HISTORY_SASH_WIDTH)
             history_panel.refresh()
             history_visible["value"] = True
 
