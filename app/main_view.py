@@ -44,8 +44,14 @@ def create_main_view(root, db_connection):
             history_panel.refresh()
             history_visible["value"] = True
 
+    def refresh_history_if_visible():
+        if history_visible["value"]:
+            history_panel.refresh()
+
     create_app_menu(root, on_quit=root.destroy, on_history=toggle_history)
-    populate_plugin_buttons(layout, db_connection)
+    populate_plugin_buttons(
+        layout, db_connection, on_after_run=refresh_history_if_visible
+    )
 
     root.update_idletasks()
     set_initial_main_sash_positions(main_paned)

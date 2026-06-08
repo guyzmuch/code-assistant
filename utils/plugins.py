@@ -10,6 +10,7 @@ def plugin_entrance(
     input_text_area,
     output_text_area,
     db_connection=None,
+    on_after_run=None,
 ):
     input_text = input_text_area.get("1.0", "end-1c")
     user_input_list = split_lines(input_text_area)
@@ -20,3 +21,6 @@ def plugin_entrance(
 
     if db_connection is not None:
         save_plugin_execution(db_connection, plugin, input_text, output_text)
+
+    if on_after_run is not None:
+        on_after_run()

@@ -7,7 +7,9 @@ from utils.ui import get_text_from_clipboard
 from views.main_layout import MainLayout
 
 
-def make_plugin_command(plugin, layout, db_connection, *, from_clipboard=False):
+def make_plugin_command(
+    plugin, layout, db_connection, *, from_clipboard=False, on_after_run=None
+):
     def run():
         if from_clipboard:
             get_text_from_clipboard(layout.user_input_text_area)
@@ -16,12 +18,13 @@ def make_plugin_command(plugin, layout, db_connection, *, from_clipboard=False):
             layout.user_input_text_area,
             layout.user_output_text_area,
             db_connection,
+            on_after_run=on_after_run,
         )
 
     return run
 
 
-def populate_plugin_buttons(layout: MainLayout, db_connection):
+def populate_plugin_buttons(layout: MainLayout, db_connection, *, on_after_run=None):
     plugins = load_plugins(db_connection)
     print("***** End of loading plugins: loaded ", len(plugins), " plugins")
 
@@ -52,7 +55,11 @@ def populate_plugin_buttons(layout: MainLayout, db_connection):
 
         # Set up the "from clipboard" button
         run_plugin_from_clipboard = make_plugin_command(
-            plugin_instance, layout, db_connection, from_clipboard=True
+            plugin_instance,
+            layout,
+            db_connection,
+            from_clipboard=True,
+            on_after_run=on_after_run,
         )
 
         plugin_from_clipboard_button = ttk.Button(
@@ -67,7 +74,7 @@ def populate_plugin_buttons(layout: MainLayout, db_connection):
 
         # Set up the "from input" button
         run_plugin = make_plugin_command(
-            plugin_instance, layout, db_connection
+            plugin_instance, layout, db_connection, on_after_run=on_after_run
         )
         plugin_button = ttk.Button(
             layout.frame_buttons,
