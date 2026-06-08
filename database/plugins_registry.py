@@ -6,7 +6,7 @@ def register_plugin_classes(db_connection, plugin_classes):
             "SELECT * FROM plugins WHERE name = ?", (plugin_class.__name__,)
         )
         plugin_from_database = cursor.fetchone()
-        print(f"plugin_from_database: {plugin_from_database}")
+        # print(f"plugin_from_database: {plugin_from_database}")
         if not plugin_from_database:
             cursor.execute(
                 """

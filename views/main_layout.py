@@ -1,12 +1,16 @@
 import tkinter as tk
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import pyperclip
 import tkinter.scrolledtext as scrolledtext
 from tkinter import ttk
 
 from app.actions import copy_result_to_input
-from app.constants import COPY_SYMBOL
+from app.constants import (
+    COLLAPSE_OUTPUT_SYMBOL,
+    COPY_SYMBOL,
+    EXPAND_OUTPUT_SYMBOL,
+)
 from app.window import PLUGIN_PANEL_WIDTH
 
 
@@ -19,6 +23,37 @@ class MainLayout:
     frame_output_buttons: ttk.Frame
     user_input_text_area: scrolledtext.ScrolledText
     user_output_text_area: scrolledtext.ScrolledText
+    output_overlay: ttk.Frame
+    output_overlay_text_area: scrolledtext.ScrolledText
+    _output_overlay_visible: bool = field(default=False, repr=False)
+
+    def show_output_overlay(self):
+        self._sync_overlay_from_output()
+        self.output_overlay.place(x=0, y=0, relwidth=1, relheight=1)
+        self.output_overlay.lift()
+        self._output_overlay_visible = True
+
+    def hide_output_overlay(self):
+        self._sync_output_from_overlay()
+        self.output_overlay.place_forget()
+        self._output_overlay_visible = False
+
+    def set_output_text(self, text: str):
+        self.user_output_text_area.delete("1.0", tk.END)
+        self.user_output_text_area.insert("1.0", text)
+        if self._output_overlay_visible:
+            self.output_overlay_text_area.delete("1.0", tk.END)
+            self.output_overlay_text_area.insert("1.0", text)
+
+    def _sync_overlay_from_output(self):
+        text = self.user_output_text_area.get("1.0", "end-1c")
+        self.output_overlay_text_area.delete("1.0", tk.END)
+        self.output_overlay_text_area.insert("1.0", text)
+
+    def _sync_output_from_overlay(self):
+        text = self.output_overlay_text_area.get("1.0", "end-1c")
+        self.user_output_text_area.delete("1.0", tk.END)
+        self.user_output_text_area.insert("1.0", text)
 
 
 def create_main_layout(paned_parent: ttk.Panedwindow) -> MainLayout:
@@ -41,6 +76,11 @@ def create_main_layout(paned_parent: ttk.Panedwindow) -> MainLayout:
     frame_output.rowconfigure(1, weight=0)
     frame_output.columnconfigure(0, weight=1)
 
+    frame_output_content = ttk.Frame(frame_output)
+    frame_output_content.grid(row=0, column=0, sticky="nsew")
+    frame_output_content.rowconfigure(0, weight=1)
+    frame_output_content.columnconfigure(0, weight=1)
+
     frame_output_buttons = ttk.Frame(frame_output)
     frame_output_buttons["padding"] = 5
 
@@ -52,7 +92,7 @@ def create_main_layout(paned_parent: ttk.Panedwindow) -> MainLayout:
     )
 
     user_output_text_area = scrolledtext.ScrolledText(
-        frame_output,
+        frame_output_content,
         height=35,
         width=30,
         wrap=tk.NONE,
@@ -79,7 +119,15 @@ def create_main_layout(paned_parent: ttk.Panedwindow) -> MainLayout:
     user_output_text_area.grid(row=0, column=0, sticky="nsew")
     frame_output_buttons.grid(row=1, column=0, sticky="ew")
 
-    return MainLayout(
+    output_overlay = ttk.Frame(paned_parent, padding=10)
+    output_overlay_text_area = scrolledtext.ScrolledText(
+        output_overlay,
+        height=35,
+        width=30,
+        wrap=tk.NONE,
+    )
+
+    layout = MainLayout(
         main_paned=paned_parent,
         frame_input=frame_input,
         frame_buttons=frame_buttons,
@@ -87,6 +135,50 @@ def create_main_layout(paned_parent: ttk.Panedwindow) -> MainLayout:
         frame_output_buttons=frame_output_buttons,
         user_input_text_area=user_input_text_area,
         user_output_text_area=user_output_text_area,
+        output_overlay=output_overlay,
+        output_overlay_text_area=output_overlay_text_area,
+    )
+    _setup_output_overlay(layout, frame_output_content)
+    return layout
+
+
+def _setup_output_overlay(layout: MainLayout, frame_output_content: ttk.Frame):
+    overlay = layout.output_overlay
+    overlay_text = layout.output_overlay_text_area
+
+    overlay.rowconfigure(0, weight=1)
+    overlay.columnconfigure(0, weight=1)
+
+    overlay_text.grid(row=0, column=0, sticky="nsew")
+
+    expand_button = ttk.Button(
+        frame_output_content,
+        text=EXPAND_OUTPUT_SYMBOL,
+        width=3,
+        command=layout.show_output_overlay,
+    )
+    expand_button.place(
+        in_=layout.user_output_text_area,
+        relx=1.0,
+        rely=0.0,
+        anchor="ne",
+        x=-22,
+        y=4,
+    )
+
+    collapse_button = ttk.Button(
+        overlay,
+        text=COLLAPSE_OUTPUT_SYMBOL,
+        width=3,
+        command=layout.hide_output_overlay,
+    )
+    collapse_button.place(
+        in_=overlay_text,
+        relx=1.0,
+        rely=0.0,
+        anchor="ne",
+        x=-22,
+        y=4,
     )
 
 
