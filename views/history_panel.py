@@ -4,7 +4,11 @@ from tkinter import ttk
 
 from app.actions import paste_text_to_input
 from app.context import get
-from database.plugin_history import fetch_recent_plugin_history, history_row_title
+from database.plugin_history import (
+    delete_plugin_history_entry,
+    fetch_recent_plugin_history,
+    history_row_title,
+)
 
 HISTORY_ENTRY_LIMIT = 10
 DETAIL_MIN_LINES = 7
@@ -188,7 +192,18 @@ class HistoryPanel(ttk.Frame):
             anchor="w",
             justify=tk.LEFT,
         )
-        title_label.pack(side=tk.LEFT, fill=tk.X, expand=True, pady=8, padx=(0, 8))
+        title_label.pack(side=tk.LEFT, fill=tk.X, expand=True, pady=8, padx=(0, 4))
+
+        delete_btn = tk.Label(
+            row,
+            text="✕",
+            bg=HEADER_BG,
+            fg="#71717a",
+            cursor="hand2",
+            padx=8,
+            pady=8,
+        )
+        delete_btn.pack(side=tk.RIGHT)
 
         if not is_last:
             tk.Frame(row, bg="#d4d4d8", height=1).pack(fill=tk.X, side=tk.BOTTOM)
@@ -198,8 +213,24 @@ class HistoryPanel(ttk.Frame):
             "row": row,
             "indicator": indicator,
             "title_label": title_label,
+            "delete_btn": delete_btn,
         }
         self._rows.append(row_data)
+
+        delete_btn.bind(
+            "<Button-1>",
+            lambda e, r=record: self._delete_record(r),
+        )
+        delete_btn.bind(
+            "<Enter>",
+            lambda e, rd=row_data: self._on_delete_enter(rd),
+            add="+",
+        )
+        delete_btn.bind(
+            "<Leave>",
+            lambda e, rd=row_data: self._on_delete_leave(rd),
+            add="+",
+        )
 
         for widget in (row, indicator, title_label):
             widget.bind(
@@ -247,8 +278,18 @@ class HistoryPanel(ttk.Frame):
         self._set_header_style(row_data, self._header_bg(row_data))
 
     def _set_header_style(self, row_data, bg):
-        for key in ("row", "indicator", "title_label"):
+        for key in ("row", "indicator", "title_label", "delete_btn"):
             row_data[key].configure(bg=bg)
+
+    def _on_delete_enter(self, row_data):
+        row_data["delete_btn"].configure(fg="#dc2626")
+
+    def _on_delete_leave(self, row_data):
+        row_data["delete_btn"].configure(fg="#71717a", bg=self._header_bg(row_data))
+
+    def _delete_record(self, record):
+        delete_plugin_history_entry(get().db_connection, record["id"])
+        self.refresh()
 
     def _set_indicator(self, row_data, expanded):
         row_data["indicator"].configure(

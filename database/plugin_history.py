@@ -30,6 +30,12 @@ def fetch_recent_plugin_history(db_connection, limit=10):
     return cursor.fetchall()
 
 
+def delete_plugin_history_entry(db_connection, record_id):
+    cursor = db_connection.cursor()
+    cursor.execute("DELETE FROM plugin_history WHERE id = ?", (record_id,))
+    db_connection.commit()
+
+
 def save_plugin_execution(db_connection, plugin: Plugin, input_text: str, output_text: str):
     cursor = db_connection.cursor()
     cursor.execute(

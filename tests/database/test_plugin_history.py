@@ -3,6 +3,7 @@ from datetime import datetime, timezone
 
 from database.connection import init_schema
 from database.plugin_history import (
+    delete_plugin_history_entry,
     fetch_recent_plugin_history,
     format_history_timestamp,
     history_row_title,
@@ -74,6 +75,29 @@ def test_history_row_title_falls_back_to_plugin_name():
         "timestamp": "2026-05-25T12:30:00+00:00",
     }
     assert history_row_title(row).endswith(" — JoinBySeparator")
+
+
+def test_delete_plugin_history_entry_removes_record():
+    conn = _memory_db()
+    _insert_history(
+        conn,
+        plugin_name="A",
+        label="",
+        timestamp="2026-01-01T10:00:00+00:00",
+    )
+    _insert_history(
+        conn,
+        plugin_name="B",
+        label="",
+        timestamp="2026-01-02T10:00:00+00:00",
+    )
+
+    rows = fetch_recent_plugin_history(conn)
+    delete_plugin_history_entry(conn, rows[0]["id"])
+
+    remaining = fetch_recent_plugin_history(conn)
+    assert len(remaining) == 1
+    assert remaining[0]["plugin_name"] == "A"
 
 
 def test_format_history_timestamp_parses_utc_iso():
