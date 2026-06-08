@@ -13,7 +13,7 @@ def format_history_timestamp(timestamp_iso: str) -> str:
 
 def history_row_title(row) -> str:
     label = row["label"] or row["plugin_name"]
-    return f"{label} — {format_history_timestamp(row['timestamp'])}"
+    return f"{format_history_timestamp(row['timestamp'])} — {label}"
 
 
 def fetch_recent_plugin_history(db_connection, limit=10):

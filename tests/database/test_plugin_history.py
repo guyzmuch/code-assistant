@@ -63,8 +63,8 @@ def test_history_row_title_uses_label_when_present():
         "timestamp": "2026-05-25T12:30:00+00:00",
     }
     title = history_row_title(row)
-    assert title.startswith("My plugin — ")
-    assert "2026-05-25" in title
+    assert title.startswith("2026-05-25")
+    assert title.endswith(" — My plugin")
 
 
 def test_history_row_title_falls_back_to_plugin_name():
@@ -73,7 +73,7 @@ def test_history_row_title_falls_back_to_plugin_name():
         "plugin_name": "JoinBySeparator",
         "timestamp": "2026-05-25T12:30:00+00:00",
     }
-    assert history_row_title(row).startswith("JoinBySeparator — ")
+    assert history_row_title(row).endswith(" — JoinBySeparator")
 
 
 def test_format_history_timestamp_parses_utc_iso():
