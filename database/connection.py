@@ -12,11 +12,11 @@ def init_schema(db_connection):
         CREATE TABLE IF NOT EXISTS plugins (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT,
-            activated INTEGER,
-            new_plugin INTEGER,
+            custom_name TEXT,
             options TEXT,
             shortcut TEXT,
-            custom_name TEXT
+            config_version INTEGER,
+            archived INTEGER
         )""")
 
         cursor.execute("""
@@ -24,9 +24,8 @@ def init_schema(db_connection):
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             input TEXT,
             output TEXT,
-            plugin_name TEXT,
-            label TEXT,
-            configuration TEXT,
+            plugin_id INTEGER,
+            config_version INTEGER,
             timestamp TEXT
         )""")
         db_connection.commit()

@@ -14,5 +14,11 @@ def plugin_entrance(plugin: Plugin):
     output_text = "\n".join(output_list)
     ctx.layout.set_output_text(output_text)
 
-    save_plugin_execution(ctx.db_connection, plugin, input_text, output_text)
+    save_plugin_execution(
+        ctx.db_connection,
+        plugin.id,
+        input_text,
+        output_text,
+        plugin.config_version,
+    )
     refresh_history_if_visible()

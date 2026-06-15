@@ -10,7 +10,7 @@ def _bind_accelerators(root, bindings):
         root.bind_all(sequence, lambda e, cb=callback: cb(), add="+")
 
 
-def create_app_menu(root, *, on_quit, on_history) -> tk.Menu:
+def create_app_menu(root, *, on_quit, on_history, on_settings) -> tk.Menu:
     menubar = tk.Menu(root)
     is_macos = sys.platform == "darwin"
     mod = "Cmd" if is_macos else "Ctrl"
@@ -45,6 +45,10 @@ def create_app_menu(root, *, on_quit, on_history) -> tk.Menu:
         accelerator=f"{mod}+Shift+H",
     )
     menubar.add_cascade(label="View", menu=view_menu)
+
+    settings_menu = tk.Menu(menubar, tearoff=0)
+    settings_menu.add_command(label="Settings…", command=on_settings)
+    menubar.add_cascade(label="Settings", menu=settings_menu)
 
     help_menu = tk.Menu(menubar, tearoff=0)
     help_menu.add_command(

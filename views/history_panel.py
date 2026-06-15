@@ -171,7 +171,7 @@ class HistoryPanel(ttk.Frame):
         self._expand_row(records[0])
 
     def _add_header_row(self, record, *, is_last):
-        title = history_row_title(record)
+        title = history_row_title(record, get().db_connection)
         row = tk.Frame(self._list_frame, bg=HEADER_BG, cursor="hand2")
 
         indicator = tk.Label(

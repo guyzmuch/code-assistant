@@ -1,16 +1,23 @@
 import tkinter as tk
 from tkinter import ttk
 
+from app.config import load_app_config
 from app.context import init as init_app_context
 from app.menu import create_app_menu
 from app.plugin_panel import populate_plugin_buttons
+from app.plugins_loader import ensure_default_plugins
 from app.window import (
     COMPACT_WINDOW_WIDTH,
     set_window_compact_top_right,
     set_window_full_width,
 )
 from views.history_panel import HistoryPanel
-from views.main_layout import create_main_layout, set_initial_main_sash_positions
+from views.main_layout import (
+    apply_text_font_size,
+    create_main_layout,
+    set_initial_main_sash_positions,
+)
+from views.settings_window import open_settings_window
 
 
 def create_main_view(root, db_connection):
@@ -32,6 +39,9 @@ def create_main_view(root, db_connection):
     )
     ctx = init_app_context(db_connection, layout, history_panel)
 
+    app_config = load_app_config()
+    apply_text_font_size(layout, app_config["text_font_size"])
+
     def toggle_history():
         if ctx.history_visible:
             outer_paned.forget(history_panel)
@@ -44,8 +54,21 @@ def create_main_view(root, db_connection):
             history_panel.refresh()
             ctx.history_visible = True
 
-    create_app_menu(root, on_quit=root.destroy, on_history=toggle_history)
+    create_app_menu(
+        root,
+        on_quit=root.destroy,
+        on_history=toggle_history,
+        on_settings=lambda: open_settings_window(root),
+    )
+
+    ensure_default_plugins(db_connection)
     populate_plugin_buttons()
+
+    if app_config["history_open_at_startup"]:
+        outer_paned.insert(0, history_panel, weight=1)
+        set_window_full_width(root)
+        ctx.history_visible = True
+        history_panel.refresh()
 
     root.update_idletasks()
     set_initial_main_sash_positions(main_paned)

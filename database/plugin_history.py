@@ -1,7 +1,6 @@
-import json
 from datetime import datetime, timezone
 
-from plugins.plugin import Plugin
+from app.plugins_loader import discover_plugin_classes
 
 
 def format_history_timestamp(timestamp_iso: str) -> str:
@@ -11,18 +10,57 @@ def format_history_timestamp(timestamp_iso: str) -> str:
     return dt.astimezone().strftime("%Y-%m-%d %H:%M")
 
 
-def history_row_title(row) -> str:
-    label = row["label"] or row["plugin_name"]
-    return f"{format_history_timestamp(row['timestamp'])} — {label}"
+def _default_name_for_class(class_name: str) -> str:
+    for plugin_class in discover_plugin_classes():
+        if plugin_class.__name__ == class_name:
+            return plugin_class.DEFAULT_NAME
+    return class_name
+
+
+def _version_suffix(row) -> str:
+    stored_version = row["config_version"]
+    current_version = row["current_config_version"]
+    if current_version is not None and stored_version == current_version:
+        return "latest version"
+    return f"v{stored_version}"
+
+
+def _history_label(row) -> str:
+    custom_name = row["custom_name"]
+    if custom_name:
+        return custom_name
+    class_name = row["name"]
+    if class_name:
+        return _default_name_for_class(class_name)
+    return "Unknown plugin"
+
+
+def history_row_title(row, db_connection=None):
+    label = _history_label(row)
+    version_suffix = _version_suffix(row)
+    return (
+        f"{format_history_timestamp(row['timestamp'])} — "
+        f"{label} ({version_suffix})"
+    )
 
 
 def fetch_recent_plugin_history(db_connection, limit=10):
     cursor = db_connection.cursor()
     cursor.execute(
         """
-        SELECT id, input, output, plugin_name, label, timestamp
-        FROM plugin_history
-        ORDER BY timestamp DESC
+        SELECT
+            h.id,
+            h.input,
+            h.output,
+            h.plugin_id,
+            h.config_version,
+            h.timestamp,
+            p.name,
+            p.custom_name,
+            p.config_version AS current_config_version
+        FROM plugin_history h
+        LEFT JOIN plugins p ON p.id = h.plugin_id
+        ORDER BY h.timestamp DESC
         LIMIT ?
         """,
         (limit,),
@@ -36,20 +74,25 @@ def delete_plugin_history_entry(db_connection, record_id):
     db_connection.commit()
 
 
-def save_plugin_execution(db_connection, plugin: Plugin, input_text: str, output_text: str):
+def save_plugin_execution(
+    db_connection,
+    plugin_id,
+    input_text,
+    output_text,
+    config_version,
+):
     cursor = db_connection.cursor()
     cursor.execute(
         """
         INSERT INTO plugin_history
-            (input, output, plugin_name, label, configuration, timestamp)
-        VALUES (?, ?, ?, ?, ?, ?)
+            (input, output, plugin_id, config_version, timestamp)
+        VALUES (?, ?, ?, ?, ?)
         """,
         (
             input_text,
             output_text,
-            plugin.get_default_name(),
-            plugin.custom_name,
-            json.dumps(plugin.get_options()),
+            plugin_id,
+            config_version,
             datetime.now(timezone.utc).isoformat(),
         ),
     )

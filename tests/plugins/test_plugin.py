@@ -55,6 +55,10 @@ class TestOptions:
         plugin = _ExamplePlugin(options='{"trim": true}')
         assert plugin.options == {"separator": ",", "trim": True}
 
+    def test_python_literal_options_override_defaults(self):
+        plugin = _ExamplePlugin(options='{"separator": ";", "trim": True}')
+        assert plugin.options == {"separator": ";", "trim": True}
+
     def test_invalid_json_falls_back_to_defaults(self):
         plugin = _ExamplePlugin(options="not json")
         assert plugin.options == {"separator": ","}

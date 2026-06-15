@@ -1,7 +1,7 @@
 import tkinter as tk
+import tkinter.font as tkfont
 from dataclasses import dataclass, field
 
-import pyperclip
 import tkinter.scrolledtext as scrolledtext
 from tkinter import ttk
 
@@ -13,6 +13,7 @@ from app.constants import (
 )
 from app.window import PLUGIN_PANEL_WIDTH
 from utils.text_drop import setup_text_drop_target
+from utils.ui import write_to_clipboard
 
 
 @dataclass
@@ -109,8 +110,9 @@ def create_main_layout(paned_parent: ttk.Panedwindow) -> MainLayout:
     copy_result_to_clipboard_button = ttk.Button(
         frame_output_buttons,
         text=f"{COPY_SYMBOL} clipboard",
-        command=lambda: pyperclip.copy(
-            user_output_text_area.get("1.0", "end-1c")
+        command=lambda: write_to_clipboard(
+            user_output_text_area,
+            user_output_text_area.get("1.0", "end-1c"),
         ),
     )
     copy_result_to_input_button.pack(side=tk.LEFT, fill=tk.X, expand=True)
@@ -194,3 +196,13 @@ def set_initial_main_sash_positions(main_paned: ttk.Panedwindow):
     input_width = remaining // 2
     main_paned.sashpos(0, input_width)
     main_paned.sashpos(1, input_width + PLUGIN_PANEL_WIDTH)
+
+
+def apply_text_font_size(layout: MainLayout, size: int):
+    font = tkfont.Font(family="TkFixedFont", size=size)
+    for text_area in (
+        layout.user_input_text_area,
+        layout.user_output_text_area,
+        layout.output_overlay_text_area,
+    ):
+        text_area.configure(font=font)

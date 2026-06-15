@@ -7,7 +7,9 @@ from database.plugin_history import (
     fetch_recent_plugin_history,
     format_history_timestamp,
     history_row_title,
+    save_plugin_execution,
 )
+from database.plugins_registry import create_plugin, update_plugin
 
 
 def _memory_db():
@@ -17,78 +19,100 @@ def _memory_db():
     return conn
 
 
-def _insert_history(conn, *, plugin_name, label, timestamp, input_text="", output_text=""):
+def _insert_history(
+    conn,
+    *,
+    plugin_id,
+    config_version,
+    timestamp,
+    input_text="",
+    output_text="",
+):
     conn.execute(
         """
         INSERT INTO plugin_history
-            (input, output, plugin_name, label, configuration, timestamp)
-        VALUES (?, ?, ?, ?, ?, ?)
+            (input, output, plugin_id, config_version, timestamp)
+        VALUES (?, ?, ?, ?, ?)
         """,
-        (input_text, output_text, plugin_name, label, "{}", timestamp),
+        (input_text, output_text, plugin_id, config_version, timestamp),
     )
     conn.commit()
 
 
 def test_fetch_recent_plugin_history_returns_newest_first_with_limit():
     conn = _memory_db()
+    plugin = create_plugin(conn, "HashLines", "", "{}")
     _insert_history(
         conn,
-        plugin_name="A",
-        label="",
+        plugin_id=plugin["id"],
+        config_version=1,
         timestamp="2026-01-01T10:00:00+00:00",
     )
     _insert_history(
         conn,
-        plugin_name="B",
-        label="",
+        plugin_id=plugin["id"],
+        config_version=1,
         timestamp="2026-01-03T10:00:00+00:00",
     )
     _insert_history(
         conn,
-        plugin_name="C",
-        label="",
+        plugin_id=plugin["id"],
+        config_version=1,
         timestamp="2026-01-02T10:00:00+00:00",
     )
 
     rows = fetch_recent_plugin_history(conn, limit=2)
 
     assert len(rows) == 2
-    assert rows[0]["plugin_name"] == "B"
-    assert rows[1]["plugin_name"] == "C"
+    assert rows[0]["timestamp"].startswith("2026-01-03")
+    assert rows[1]["timestamp"].startswith("2026-01-02")
 
 
-def test_history_row_title_uses_label_when_present():
+def test_history_row_title_uses_custom_name_and_latest_version():
+    conn = _memory_db()
+    plugin = create_plugin(conn, "HashLines", "My plugin", "{}")
     row = {
-        "label": "My plugin",
-        "plugin_name": "default_name",
+        "custom_name": "My plugin",
+        "name": "HashLines",
+        "config_version": 1,
+        "current_config_version": 1,
         "timestamp": "2026-05-25T12:30:00+00:00",
     }
-    title = history_row_title(row)
+    title = history_row_title(row, conn)
     assert title.startswith("2026-05-25")
-    assert title.endswith(" — My plugin")
+    assert "My plugin" in title
+    assert "(latest version)" in title
 
 
-def test_history_row_title_falls_back_to_plugin_name():
+def test_history_row_title_shows_version_when_stale():
+    conn = _memory_db()
+    plugin = create_plugin(conn, "JoinBySeparator", "", "{}")
+    update_plugin(conn, plugin["id"], "", '{"separator": ";"}')
     row = {
-        "label": "",
-        "plugin_name": "JoinBySeparator",
+        "custom_name": "",
+        "name": "JoinBySeparator",
+        "config_version": 1,
+        "current_config_version": 2,
         "timestamp": "2026-05-25T12:30:00+00:00",
     }
-    assert history_row_title(row).endswith(" — JoinBySeparator")
+    title = history_row_title(row, conn)
+    assert "(v1)" in title
+    assert "Join by separator" in title
 
 
 def test_delete_plugin_history_entry_removes_record():
     conn = _memory_db()
+    plugin = create_plugin(conn, "HashLines", "", "{}")
     _insert_history(
         conn,
-        plugin_name="A",
-        label="",
+        plugin_id=plugin["id"],
+        config_version=1,
         timestamp="2026-01-01T10:00:00+00:00",
     )
     _insert_history(
         conn,
-        plugin_name="B",
-        label="",
+        plugin_id=plugin["id"],
+        config_version=1,
         timestamp="2026-01-02T10:00:00+00:00",
     )
 
@@ -97,7 +121,21 @@ def test_delete_plugin_history_entry_removes_record():
 
     remaining = fetch_recent_plugin_history(conn)
     assert len(remaining) == 1
-    assert remaining[0]["plugin_name"] == "A"
+    assert remaining[0]["timestamp"].startswith("2026-01-01")
+
+
+def test_save_plugin_execution_stores_plugin_id_and_version():
+    conn = _memory_db()
+    plugin = create_plugin(conn, "HashLines", "Label", '{"algorithm": "sha256"}')
+
+    save_plugin_execution(conn, plugin["id"], "in", "out", plugin["config_version"])
+
+    rows = fetch_recent_plugin_history(conn)
+    assert len(rows) == 1
+    assert rows[0]["plugin_id"] == plugin["id"]
+    assert rows[0]["config_version"] == 1
+    assert rows[0]["input"] == "in"
+    assert rows[0]["output"] == "out"
 
 
 def test_format_history_timestamp_parses_utc_iso():

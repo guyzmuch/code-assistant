@@ -3,6 +3,7 @@ from tkinter import ttk
 from app.constants import COPY_SYMBOL
 from app.context import get
 from app.plugins_loader import load_plugins
+from database.plugins_registry import fetch_configured_plugins
 from utils.plugins import plugin_entrance
 from utils.ui import get_text_from_clipboard
 
@@ -14,6 +15,12 @@ def make_plugin_command(plugin, *, from_clipboard=False):
         plugin_entrance(plugin)
 
     return run
+
+
+def clear_plugin_buttons():
+    layout = get().layout
+    for child in layout.frame_buttons.winfo_children():
+        child.destroy()
 
 
 def populate_plugin_buttons():
@@ -28,9 +35,7 @@ def populate_plugin_buttons():
         plugin_class.__name__: plugin_class for plugin_class in plugins
     }
 
-    cursor = db_connection.cursor()
-    cursor.execute("SELECT * FROM plugins WHERE activated = 1")
-    plugins_from_database = cursor.fetchall()
+    plugins_from_database = fetch_configured_plugins(db_connection)
 
     row = 0
     for plugin_from_database in plugins_from_database:
@@ -45,6 +50,8 @@ def populate_plugin_buttons():
             custom_name=plugin_from_database["custom_name"],
             options=plugin_from_database["options"],
             shortcut=plugin_from_database["shortcut"],
+            id=plugin_from_database["id"],
+            config_version=plugin_from_database["config_version"],
         )
 
         print("Instanciated plugin: ", plugin_instance.get_name())
@@ -71,3 +78,8 @@ def populate_plugin_buttons():
         plugin_button.grid(row=row, column=1, sticky="ew", padx=(0, 5))
         plugin_button.configure(width=15)
         row += 1
+
+
+def repopulate_plugin_buttons():
+    clear_plugin_buttons()
+    populate_plugin_buttons()
