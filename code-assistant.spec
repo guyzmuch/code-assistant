@@ -1,5 +1,10 @@
 # -*- mode: python ; coding: utf-8 -*-
+import sys
+from pathlib import Path
+
 from PyInstaller.utils.hooks import collect_submodules
+
+sys.path.insert(0, str(Path(SPECPATH) / "src"))
 
 block_cipher = None
 

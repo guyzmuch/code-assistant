@@ -1,35 +1,30 @@
 import importlib
-import os
+import pkgutil
+
+import plugins
 
 from app.constants import DEFAULT_PLUGIN_CLASS_NAMES
 from database.plugins_registry import count_active_plugins, create_plugin
-from paths import SRC_ROOT
-
-PLUGINS_DIR = SRC_ROOT / "plugins"
-EXCLUDED_FILES = {"__init__.py", "plugin.py"}
 
 
 def discover_plugin_classes():
-    """Return the list of the plugin files present in the project"""
+    """Return plugin classes by importing every module under the plugins package."""
     plugin_classes = []
+    prefix = plugins.__name__ + "."
 
-    for root, _dirs, files in os.walk(PLUGINS_DIR):
-        for file in files:
-            if not file.endswith(".py") or file in EXCLUDED_FILES:
-                continue
+    for module_info in pkgutil.walk_packages(plugins.__path__, prefix):
+        if module_info.name.endswith(".plugin"):
+            continue
 
-            rel_path = os.path.relpath(os.path.join(root, file), SRC_ROOT)
-            module_path = rel_path.replace(os.sep, ".")[:-3]
-
-            module = importlib.import_module(module_path)
-            for attr_name in dir(module):
-                attr = getattr(module, attr_name)
-                if (
-                    isinstance(attr, type)
-                    and hasattr(attr, "__bases__")
-                    and any(base.__name__ == "Plugin" for base in attr.__bases__)
-                ):
-                    plugin_classes.append(attr)
+        module = importlib.import_module(module_info.name)
+        for attr_name in dir(module):
+            attr = getattr(module, attr_name)
+            if (
+                isinstance(attr, type)
+                and hasattr(attr, "__bases__")
+                and any(base.__name__ == "Plugin" for base in attr.__bases__)
+            ):
+                plugin_classes.append(attr)
 
     return plugin_classes
 
