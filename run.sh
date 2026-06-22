@@ -2,7 +2,7 @@
 source venv/bin/activate
 
 # Run your app
-python main.py
+python src/main.py
 
 # Deactivate when done
 deactivate

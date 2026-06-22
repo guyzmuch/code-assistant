@@ -3,8 +3,9 @@ import os
 
 from app.constants import DEFAULT_PLUGIN_CLASS_NAMES
 from database.plugins_registry import count_active_plugins, create_plugin
+from paths import SRC_ROOT
 
-PLUGINS_DIR = "plugins"
+PLUGINS_DIR = SRC_ROOT / "plugins"
 EXCLUDED_FILES = {"__init__.py", "plugin.py"}
 
 
@@ -17,7 +18,7 @@ def discover_plugin_classes():
             if not file.endswith(".py") or file in EXCLUDED_FILES:
                 continue
 
-            rel_path = os.path.relpath(os.path.join(root, file), ".")
+            rel_path = os.path.relpath(os.path.join(root, file), SRC_ROOT)
             module_path = rel_path.replace(os.sep, ".")[:-3]
 
             module = importlib.import_module(module_path)

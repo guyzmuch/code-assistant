@@ -2,7 +2,9 @@ import json
 import os
 import tempfile
 
-CONFIG_PATH = "config.json"
+from paths import SRC_ROOT
+
+CONFIG_PATH = SRC_ROOT / "config.json"
 
 DEFAULT_CONFIG = {
     "text_font_size": 10,
@@ -11,7 +13,7 @@ DEFAULT_CONFIG = {
 
 
 def load_app_config():
-    if not os.path.exists(CONFIG_PATH):
+    if not CONFIG_PATH.exists():
         return dict(DEFAULT_CONFIG)
     with open(CONFIG_PATH, encoding="utf-8") as config_file:
         data = json.load(config_file)
@@ -23,8 +25,7 @@ def load_app_config():
 def save_app_config(config):
     merged = dict(DEFAULT_CONFIG)
     merged.update(config)
-    directory = os.path.dirname(os.path.abspath(CONFIG_PATH)) or "."
-    fd, tmp_path = tempfile.mkstemp(dir=directory, suffix=".tmp")
+    fd, tmp_path = tempfile.mkstemp(dir=str(CONFIG_PATH.parent), suffix=".tmp")
     try:
         with os.fdopen(fd, "w", encoding="utf-8") as tmp_file:
             json.dump(merged, tmp_file, indent=2)

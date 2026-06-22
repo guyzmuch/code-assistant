@@ -1,8 +1,8 @@
 __pycache__/
 .pytest_cache/
 venv/
-plugins.db
-config.json
+src/plugins.db
+src/config.json
 
 temp.txt
 TODO.md
