@@ -70,22 +70,17 @@ class PluginConfigDialog(tk.Toplevel):
         name_entry.focus_set()
 
     def _save(self):
-        from app.context import get
-
         custom_name = self._name_var.get()
         options = self._options_text.get("1.0", "end-1c")
-        db_connection = get().db_connection
 
         if self._is_edit:
             update_plugin(
-                db_connection,
                 self._plugin_row["id"],
                 custom_name,
                 options,
             )
         else:
             create_plugin(
-                db_connection,
                 self._plugin_class.__name__,
                 custom_name,
                 options,

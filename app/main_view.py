@@ -61,7 +61,7 @@ def create_main_view(root, db_connection):
         on_settings=lambda: open_settings_window(root),
     )
 
-    ensure_default_plugins(db_connection)
+    ensure_default_plugins()
     populate_plugin_buttons()
 
     if app_config["history_open_at_startup"]:

@@ -1,6 +1,3 @@
-import sqlite3
-
-from database.connection import init_schema
 from database.plugins_registry import (
     archive_plugin,
     count_active_plugins,
@@ -9,6 +6,7 @@ from database.plugins_registry import (
     update_plugin,
 )
 from plugins.plugin import Plugin
+from tests.database.conftest import memory_db
 
 
 class _SamplePlugin(Plugin):
@@ -21,21 +19,14 @@ class _SamplePlugin(Plugin):
         return user_input_list
 
 
-def _memory_db():
-    conn = sqlite3.connect(":memory:")
-    conn.row_factory = sqlite3.Row
-    init_schema(conn)
-    return conn
-
-
 def test_count_active_plugins_is_zero_on_empty_db():
-    conn = _memory_db()
-    assert count_active_plugins(conn) == 0
+    memory_db()
+    assert count_active_plugins() == 0
 
 
 def test_create_plugin_uses_defaults_for_optional_fields():
-    conn = _memory_db()
-    row = create_plugin(conn, "_SamplePlugin")
+    memory_db()
+    row = create_plugin("_SamplePlugin")
 
     assert row["name"] == "_SamplePlugin"
     assert row["custom_name"] == ""
@@ -45,8 +36,8 @@ def test_create_plugin_uses_defaults_for_optional_fields():
 
 
 def test_create_plugin_returns_new_row():
-    conn = _memory_db()
-    row = create_plugin(conn, "SamplePlugin", "My label", '{"key": "value"}')
+    memory_db()
+    row = create_plugin("SamplePlugin", "My label", '{"key": "value"}')
 
     assert row["custom_name"] == "My label"
     assert row["options"] == '{"key": "value"}'
@@ -54,9 +45,9 @@ def test_create_plugin_returns_new_row():
 
 
 def test_update_plugin_increments_config_version():
-    conn = _memory_db()
-    row = create_plugin(conn, "SamplePlugin", "v1", "{}")
-    updated = update_plugin(conn, row["id"], "v2", '{"a": 1}')
+    memory_db()
+    row = create_plugin("SamplePlugin", "v1", "{}")
+    updated = update_plugin(row["id"], "v2", '{"a": 1}')
 
     assert updated["custom_name"] == "v2"
     assert updated["options"] == '{"a": 1}'
@@ -64,9 +55,9 @@ def test_update_plugin_increments_config_version():
 
 
 def test_archive_plugin_hides_from_fetch_configured():
-    conn = _memory_db()
-    row = create_plugin(conn, "SamplePlugin", "", "{}")
-    archive_plugin(conn, row["id"])
+    memory_db()
+    row = create_plugin("SamplePlugin", "", "{}")
+    archive_plugin(row["id"])
 
-    assert count_active_plugins(conn) == 0
-    assert fetch_configured_plugins(conn) == []
+    assert count_active_plugins() == 0
+    assert fetch_configured_plugins() == []

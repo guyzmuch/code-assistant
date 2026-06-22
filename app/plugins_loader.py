@@ -33,7 +33,7 @@ def discover_plugin_classes():
     return plugin_classes
 
 
-def load_plugins(db_connection):
+def load_plugins():
     return discover_plugin_classes()
 
 
@@ -44,9 +44,9 @@ def plugin_category(plugin_class):
     return "other"
 
 
-def ensure_default_plugins(db_connection):
+def ensure_default_plugins():
     """Seed the database on first run when no configured plugins exist yet."""
-    if count_active_plugins(db_connection) > 0:
+    if count_active_plugins() > 0:
         return
 
     plugin_classes = discover_plugin_classes()
@@ -60,4 +60,4 @@ def ensure_default_plugins(db_connection):
     ]
 
     for plugin_class in default_classes:
-        create_plugin(db_connection, plugin_class.__name__)
+        create_plugin(plugin_class.__name__)

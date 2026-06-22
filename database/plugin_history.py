@@ -1,5 +1,6 @@
 from datetime import datetime, timezone
 
+from app.context import db_connection
 from app.plugins_loader import discover_plugin_classes
 
 
@@ -35,7 +36,7 @@ def _history_label(row) -> str:
     return "Unknown plugin"
 
 
-def history_row_title(row, db_connection=None):
+def history_row_title(row):
     label = _history_label(row)
     version_suffix = _version_suffix(row)
     return (
@@ -44,8 +45,9 @@ def history_row_title(row, db_connection=None):
     )
 
 
-def fetch_recent_plugin_history(db_connection, limit=10):
-    cursor = db_connection.cursor()
+def fetch_recent_plugin_history(limit=10):
+    conn = db_connection()
+    cursor = conn.cursor()
     cursor.execute(
         """
         SELECT
@@ -68,20 +70,21 @@ def fetch_recent_plugin_history(db_connection, limit=10):
     return cursor.fetchall()
 
 
-def delete_plugin_history_entry(db_connection, record_id):
-    cursor = db_connection.cursor()
+def delete_plugin_history_entry(record_id):
+    conn = db_connection()
+    cursor = conn.cursor()
     cursor.execute("DELETE FROM plugin_history WHERE id = ?", (record_id,))
-    db_connection.commit()
+    conn.commit()
 
 
 def save_plugin_execution(
-    db_connection,
     plugin_id,
     input_text,
     output_text,
     config_version,
 ):
-    cursor = db_connection.cursor()
+    conn = db_connection()
+    cursor = conn.cursor()
     cursor.execute(
         """
         INSERT INTO plugin_history
@@ -96,4 +99,4 @@ def save_plugin_execution(
             datetime.now(timezone.utc).isoformat(),
         ),
     )
-    db_connection.commit()
+    conn.commit()

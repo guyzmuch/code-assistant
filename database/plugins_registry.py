@@ -1,34 +1,42 @@
-def count_active_plugins(db_connection):
-    cursor = db_connection.cursor()
+from app.context import db_connection
+
+
+def count_active_plugins():
+    conn = db_connection()
+    cursor = conn.cursor()
     cursor.execute("SELECT COUNT(*) FROM plugins WHERE archived = 0")
     return cursor.fetchone()[0]
 
 
-def fetch_configured_plugins(db_connection):
-    cursor = db_connection.cursor()
+def fetch_configured_plugins():
+    conn = db_connection()
+    cursor = conn.cursor()
     cursor.execute(
         "SELECT * FROM plugins WHERE archived = 0 ORDER BY id"
     )
     return cursor.fetchall()
 
 
-def get_plugin_by_id(db_connection, plugin_id):
-    cursor = db_connection.cursor()
+def get_plugin_by_id(plugin_id):
+    conn = db_connection()
+    cursor = conn.cursor()
     cursor.execute("SELECT * FROM plugins WHERE id = ?", (plugin_id,))
     return cursor.fetchone()
 
 
-def archive_plugin(db_connection, plugin_id):
-    cursor = db_connection.cursor()
+def archive_plugin(plugin_id):
+    conn = db_connection()
+    cursor = conn.cursor()
     cursor.execute(
         "UPDATE plugins SET archived = 1 WHERE id = ?",
         (plugin_id,),
     )
-    db_connection.commit()
+    conn.commit()
 
 
-def create_plugin(db_connection, name, custom_name="", options="{}"):
-    cursor = db_connection.cursor()
+def create_plugin(name, custom_name="", options="{}"):
+    conn = db_connection()
+    cursor = conn.cursor()
     cursor.execute(
         """
         INSERT INTO plugins
@@ -37,12 +45,13 @@ def create_plugin(db_connection, name, custom_name="", options="{}"):
         """,
         (name, custom_name, options, "", 1, 0),
     )
-    db_connection.commit()
-    return get_plugin_by_id(db_connection, cursor.lastrowid)
+    conn.commit()
+    return get_plugin_by_id(cursor.lastrowid)
 
 
-def update_plugin(db_connection, plugin_id, custom_name, options):
-    cursor = db_connection.cursor()
+def update_plugin(plugin_id, custom_name, options):
+    conn = db_connection()
+    cursor = conn.cursor()
     cursor.execute(
         """
         UPDATE plugins
@@ -51,5 +60,5 @@ def update_plugin(db_connection, plugin_id, custom_name, options):
         """,
         (custom_name, options, plugin_id),
     )
-    db_connection.commit()
-    return get_plugin_by_id(db_connection, plugin_id)
+    conn.commit()
+    return get_plugin_by_id(plugin_id)

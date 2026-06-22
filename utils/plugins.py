@@ -15,7 +15,6 @@ def plugin_entrance(plugin: Plugin):
     ctx.layout.set_output_text(output_text)
 
     save_plugin_execution(
-        ctx.db_connection,
         plugin.id,
         input_text,
         output_text,

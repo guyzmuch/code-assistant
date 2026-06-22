@@ -3,7 +3,6 @@ import tkinter.font as tkfont
 from tkinter import ttk
 
 from app.actions import paste_text_to_input
-from app.context import get
 from database.plugin_history import (
     delete_plugin_history_entry,
     fetch_recent_plugin_history,
@@ -150,9 +149,7 @@ class HistoryPanel(ttk.Frame):
         self._set_readonly_text(self._detail_frame["input"]["widget"], "")
         self._set_readonly_text(self._detail_frame["output"]["widget"], "")
 
-        records = fetch_recent_plugin_history(
-            get().db_connection, limit=HISTORY_ENTRY_LIMIT
-        )
+        records = fetch_recent_plugin_history(limit=HISTORY_ENTRY_LIMIT)
         if not records:
             tk.Label(
                 self._list_frame,
@@ -171,7 +168,7 @@ class HistoryPanel(ttk.Frame):
         self._expand_row(records[0])
 
     def _add_header_row(self, record, *, is_last):
-        title = history_row_title(record, get().db_connection)
+        title = history_row_title(record)
         row = tk.Frame(self._list_frame, bg=HEADER_BG, cursor="hand2")
 
         indicator = tk.Label(
@@ -288,7 +285,7 @@ class HistoryPanel(ttk.Frame):
         row_data["delete_btn"].configure(fg="#71717a", bg=self._header_bg(row_data))
 
     def _delete_record(self, record):
-        delete_plugin_history_entry(get().db_connection, record["id"])
+        delete_plugin_history_entry(record["id"])
         self.refresh()
 
     def _set_indicator(self, row_data, expanded):

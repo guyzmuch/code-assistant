@@ -26,16 +26,15 @@ def clear_plugin_buttons():
 def populate_plugin_buttons():
     ctx = get()
     layout = ctx.layout
-    db_connection = ctx.db_connection
 
-    plugins = load_plugins(db_connection)
+    plugins = load_plugins()
     print("***** End of loading plugins: loaded ", len(plugins), " plugins")
 
     plugins_dict = {
         plugin_class.__name__: plugin_class for plugin_class in plugins
     }
 
-    plugins_from_database = fetch_configured_plugins(db_connection)
+    plugins_from_database = fetch_configured_plugins()
 
     row = 0
     for plugin_from_database in plugins_from_database:

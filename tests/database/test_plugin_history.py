@@ -1,7 +1,5 @@
-import sqlite3
 from datetime import datetime, timezone
 
-from database.connection import init_schema
 from database.plugin_history import (
     delete_plugin_history_entry,
     fetch_recent_plugin_history,
@@ -10,13 +8,7 @@ from database.plugin_history import (
     save_plugin_execution,
 )
 from database.plugins_registry import create_plugin, update_plugin
-
-
-def _memory_db():
-    conn = sqlite3.connect(":memory:")
-    conn.row_factory = sqlite3.Row
-    init_schema(conn)
-    return conn
+from tests.database.conftest import memory_db
 
 
 def _insert_history(
@@ -40,8 +32,8 @@ def _insert_history(
 
 
 def test_fetch_recent_plugin_history_returns_newest_first_with_limit():
-    conn = _memory_db()
-    plugin = create_plugin(conn, "HashLines", "", "{}")
+    conn = memory_db()
+    plugin = create_plugin("HashLines", "", "{}")
     _insert_history(
         conn,
         plugin_id=plugin["id"],
@@ -61,7 +53,7 @@ def test_fetch_recent_plugin_history_returns_newest_first_with_limit():
         timestamp="2026-01-02T10:00:00+00:00",
     )
 
-    rows = fetch_recent_plugin_history(conn, limit=2)
+    rows = fetch_recent_plugin_history(limit=2)
 
     assert len(rows) == 2
     assert rows[0]["timestamp"].startswith("2026-01-03")
@@ -69,8 +61,7 @@ def test_fetch_recent_plugin_history_returns_newest_first_with_limit():
 
 
 def test_history_row_title_uses_custom_name_and_latest_version():
-    conn = _memory_db()
-    plugin = create_plugin(conn, "HashLines", "My plugin", "{}")
+    memory_db()
     row = {
         "custom_name": "My plugin",
         "name": "HashLines",
@@ -78,16 +69,16 @@ def test_history_row_title_uses_custom_name_and_latest_version():
         "current_config_version": 1,
         "timestamp": "2026-05-25T12:30:00+00:00",
     }
-    title = history_row_title(row, conn)
+    title = history_row_title(row)
     assert title.startswith("2026-05-25")
     assert "My plugin" in title
     assert "(latest version)" in title
 
 
 def test_history_row_title_shows_version_when_stale():
-    conn = _memory_db()
-    plugin = create_plugin(conn, "JoinBySeparator", "", "{}")
-    update_plugin(conn, plugin["id"], "", '{"separator": ";"}')
+    memory_db()
+    plugin = create_plugin("JoinBySeparator", "", "{}")
+    update_plugin(plugin["id"], "", '{"separator": ";"}')
     row = {
         "custom_name": "",
         "name": "JoinBySeparator",
@@ -95,14 +86,14 @@ def test_history_row_title_shows_version_when_stale():
         "current_config_version": 2,
         "timestamp": "2026-05-25T12:30:00+00:00",
     }
-    title = history_row_title(row, conn)
+    title = history_row_title(row)
     assert "(v1)" in title
     assert "Join by separator" in title
 
 
 def test_delete_plugin_history_entry_removes_record():
-    conn = _memory_db()
-    plugin = create_plugin(conn, "HashLines", "", "{}")
+    conn = memory_db()
+    plugin = create_plugin("HashLines", "", "{}")
     _insert_history(
         conn,
         plugin_id=plugin["id"],
@@ -116,21 +107,21 @@ def test_delete_plugin_history_entry_removes_record():
         timestamp="2026-01-02T10:00:00+00:00",
     )
 
-    rows = fetch_recent_plugin_history(conn)
-    delete_plugin_history_entry(conn, rows[0]["id"])
+    rows = fetch_recent_plugin_history()
+    delete_plugin_history_entry(rows[0]["id"])
 
-    remaining = fetch_recent_plugin_history(conn)
+    remaining = fetch_recent_plugin_history()
     assert len(remaining) == 1
     assert remaining[0]["timestamp"].startswith("2026-01-01")
 
 
 def test_save_plugin_execution_stores_plugin_id_and_version():
-    conn = _memory_db()
-    plugin = create_plugin(conn, "HashLines", "Label", '{"algorithm": "sha256"}')
+    memory_db()
+    plugin = create_plugin("HashLines", "Label", '{"algorithm": "sha256"}')
 
-    save_plugin_execution(conn, plugin["id"], "in", "out", plugin["config_version"])
+    save_plugin_execution(plugin["id"], "in", "out", plugin["config_version"])
 
-    rows = fetch_recent_plugin_history(conn)
+    rows = fetch_recent_plugin_history()
     assert len(rows) == 1
     assert rows[0]["plugin_id"] == plugin["id"]
     assert rows[0]["config_version"] == 1

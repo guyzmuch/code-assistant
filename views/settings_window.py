@@ -155,9 +155,7 @@ class SettingsWindow(tk.Toplevel):
 
     def _refresh_configured_list(self):
         self._configured_listbox.delete(0, tk.END)
-        self._configured_rows = list(
-            fetch_configured_plugins(get().db_connection)
-        )
+        self._configured_rows = list(fetch_configured_plugins())
         for row in self._configured_rows:
             self._configured_listbox.insert(tk.END, self._display_name_for_row(row))
 
@@ -236,7 +234,7 @@ class SettingsWindow(tk.Toplevel):
         ):
             return
 
-        archive_plugin(get().db_connection, row["id"])
+        archive_plugin(row["id"])
         self._on_plugins_changed()
 
 

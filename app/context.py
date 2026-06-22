@@ -32,5 +32,9 @@ def get() -> AppContext:
     return _context
 
 
+def db_connection():
+    return get().db_connection
+
+
 def refresh_history_if_visible():
     get().refresh_history_if_visible()
