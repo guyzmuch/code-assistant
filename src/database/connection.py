@@ -1,9 +1,9 @@
 import sqlite3
 from contextlib import contextmanager
 
-from paths import SRC_ROOT
+from paths import USER_DATA_DIR
 
-PLUGINS_DB_PATH = SRC_ROOT / "plugins.db"
+PLUGINS_DB_PATH = USER_DATA_DIR / "plugins.db"
 
 
 def init_schema(db_connection):

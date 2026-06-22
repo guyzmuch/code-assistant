@@ -2,9 +2,9 @@ import json
 import os
 import tempfile
 
-from paths import SRC_ROOT
+from paths import USER_DATA_DIR
 
-CONFIG_PATH = SRC_ROOT / "config.json"
+CONFIG_PATH = USER_DATA_DIR / "config.json"
 
 DEFAULT_CONFIG = {
     "text_font_size": 10,
