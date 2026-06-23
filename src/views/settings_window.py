@@ -92,7 +92,12 @@ class SettingsWindow(tk.Toplevel):
         configured_list_frame.rowconfigure(0, weight=1)
         configured_list_frame.columnconfigure(0, weight=1)
 
-        self._configured_listbox = tk.Listbox(configured_list_frame, exportselection=False)
+        self._configured_listbox = tk.Listbox(
+            configured_list_frame,
+            exportselection=False,
+            bg="white",
+            fg="black",
+        )
         configured_scroll = ttk.Scrollbar(
             configured_list_frame,
             orient=tk.VERTICAL,
@@ -111,7 +116,9 @@ class SettingsWindow(tk.Toplevel):
             configured_buttons, text="Remove", command=self._remove_plugin
         ).pack(side=tk.LEFT)
 
-        available_canvas = tk.Canvas(available_frame, highlightthickness=0)
+        available_canvas = tk.Canvas(
+            available_frame, highlightthickness=0, bg="white"
+        )
         available_scroll = ttk.Scrollbar(
             available_frame,
             orient=tk.VERTICAL,

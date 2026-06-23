@@ -22,6 +22,8 @@ from views.settings_window import open_settings_window
 
 def create_main_view(root, db_connection):
     body_frame = ttk.Frame(root)
+    style = ttk.Style()
+    style.theme_use("clam")  # not "aqua"
     body_frame.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 
     outer_paned = ttk.Panedwindow(body_frame, orient=tk.HORIZONTAL)

@@ -25,35 +25,45 @@ class PluginConfigDialog(tk.Toplevel):
         self.transient(parent)
         self.grab_set()
         self.resizable(True, True)
+        self.configure(bg="white")
 
-        self.columnconfigure(1, weight=1)
-        self.rowconfigure(3, weight=1)
+        body = ttk.Frame(self, padding=10)
+        body.pack(fill=tk.BOTH, expand=True)
+        body.columnconfigure(1, weight=1)
+        body.rowconfigure(3, weight=1)
 
-        ttk.Label(self, text="Plugin:").grid(
-            row=0, column=0, sticky="w", padx=10, pady=(10, 4)
+        ttk.Label(body, text="Plugin:").grid(
+            row=0, column=0, sticky="w", pady=(0, 4)
         )
         ttk.Label(
-            self,
+            body,
             text=plugin_class.DEFAULT_NAME,
-        ).grid(row=0, column=1, sticky="w", padx=(0, 10), pady=(10, 4))
+        ).grid(row=0, column=1, sticky="w", pady=(0, 4))
 
-        ttk.Label(self, text="Custom name:").grid(
-            row=1, column=0, sticky="w", padx=10, pady=4
+        ttk.Label(body, text="Custom name:").grid(
+            row=1, column=0, sticky="w", pady=4
         )
         self._name_var = tk.StringVar()
-        name_entry = ttk.Entry(self, textvariable=self._name_var)
-        name_entry.grid(row=1, column=1, sticky="ew", padx=(0, 10), pady=4)
+        name_entry = ttk.Entry(body, textvariable=self._name_var)
+        name_entry.grid(row=1, column=1, sticky="ew", pady=4)
 
-        ttk.Label(self, text="Options (JSON):").grid(
-            row=2, column=0, sticky="nw", padx=10, pady=4
+        ttk.Label(body, text="Options (JSON):").grid(
+            row=2, column=0, sticky="nw", pady=4
         )
-        self._options_text = scrolledtext.ScrolledText(self, height=12, width=50)
+        self._options_text = scrolledtext.ScrolledText(
+            body,
+            height=12,
+            width=50,
+            bg="white",
+            fg="black",
+            insertbackground="black",
+        )
         self._options_text.grid(
-            row=3, column=0, columnspan=2, sticky="nsew", padx=10, pady=4
+            row=3, column=0, columnspan=2, sticky="nsew", pady=4
         )
 
-        buttons = ttk.Frame(self)
-        buttons.grid(row=4, column=0, columnspan=2, sticky="e", padx=10, pady=10)
+        buttons = ttk.Frame(body)
+        buttons.grid(row=4, column=0, columnspan=2, sticky="e", pady=(10, 0))
         ttk.Button(buttons, text="Cancel", command=self.destroy).pack(
             side=tk.RIGHT, padx=(6, 0)
         )

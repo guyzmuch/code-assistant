@@ -91,6 +91,9 @@ def create_main_layout(paned_parent: ttk.Panedwindow) -> MainLayout:
         height=35,
         width=30,
         wrap=tk.NONE,
+        bg="white",
+        fg="black",
+        insertbackground="black",
     )
 
     user_output_text_area = scrolledtext.ScrolledText(
@@ -98,6 +101,9 @@ def create_main_layout(paned_parent: ttk.Panedwindow) -> MainLayout:
         height=35,
         width=30,
         wrap=tk.NONE,
+        bg="white",
+        fg="black",
+        insertbackground="black",
     )
 
     copy_result_to_input_button = ttk.Button(
@@ -129,6 +135,9 @@ def create_main_layout(paned_parent: ttk.Panedwindow) -> MainLayout:
         height=35,
         width=30,
         wrap=tk.NONE,
+        bg="white",
+        fg="black",
+        insertbackground="black",
     )
 
     layout = MainLayout(
