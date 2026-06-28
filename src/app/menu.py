@@ -84,6 +84,6 @@ def create_app_menu(root, *, on_quit, on_history, on_settings) -> tk.Menu:
 def _show_about(root):
     messagebox.showinfo(
         WINDOW_TITLE,
-        f"{WINDOW_TITLE}\n\nDeveloper utilities for text and data.",
+        f"{WINDOW_TITLE}\n\nSmall developer utilities for text and data.",
         parent=root,
     )

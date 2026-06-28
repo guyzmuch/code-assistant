@@ -2,7 +2,7 @@ import os
 import sys
 from pathlib import Path
 
-APP_SLUG = "code-assistant"
+APP_SLUG = "dev-toolbelt"
 
 
 def bundle_root() -> Path:
@@ -15,7 +15,7 @@ def user_data_dir() -> Path:
     if not getattr(sys, "frozen", False):
         path = Path(__file__).resolve().parent
     elif sys.platform == "win32":
-        path = Path.home() / "AppData" / "Local" / "Code Assistant"
+        path = Path.home() / "AppData" / "Local" / "DevToolbelt"
     else:
         config_home = os.environ.get("XDG_CONFIG_HOME")
         base = Path(config_home) if config_home else Path.home() / ".config"

@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinterdnd2 import TkinterDnD
 
-WINDOW_TITLE = "Dev assistant"
+WINDOW_TITLE = "DevToolbelt"
 WINDOW_HEIGHT = 650
 COMPACT_WINDOW_WIDTH = 700
 PLUGIN_PANEL_WIDTH = 200

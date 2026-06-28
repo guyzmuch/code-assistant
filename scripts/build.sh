@@ -11,12 +11,12 @@ fi
 
 pip install -q -r requirements.txt -r requirements-dev.txt
 
-pyinstaller code-assistant.spec --noconfirm
+pyinstaller dev-toolbelt.spec --noconfirm
 
-if [[ -f dist/code-assistant.exe ]]; then
-  echo "Built: dist/code-assistant.exe"
-elif [[ -d dist/code-assistant.app ]]; then
-  echo "Built: dist/code-assistant.app"
+if [[ -f dist/dev-toolbelt.exe ]]; then
+  echo "Built: dist/dev-toolbelt.exe"
+elif [[ -d dist/dev-toolbelt.app ]]; then
+  echo "Built: dist/dev-toolbelt.app"
 else
-  echo "Built: dist/code-assistant"
+  echo "Built: dist/dev-toolbelt"
 fi

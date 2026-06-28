@@ -1,6 +1,6 @@
-# Code Assistant
+# DevToolbelt
 
-A desktop app to help in text/data transforming on input from the UI or clipboard.
+A desktop app of small developer utilities for transforming text and data from the UI or clipboard.
 
 ## Requirements
 
@@ -49,9 +49,9 @@ Bundled app data directory:
 
 | OS | Location |
 |----|----------|
-| Linux | `~/.config/code-assistant/` |
-| macOS | `~/.config/code-assistant/` |
-| Windows | `%LOCALAPPDATA%\Code Assistant\` |
+| Linux | `~/.config/dev-toolbelt/` |
+| macOS | `~/.config/dev-toolbelt/` |
+| Windows | `%LOCALAPPDATA%\DevToolbelt\` |
 
 ## Build an executable
 
@@ -71,20 +71,20 @@ This installs dev dependencies (including PyInstaller), runs the spec file, and 
 
 | OS | Output |
 |----|--------|
-| Linux | `dist/code-assistant` |
-| macOS | `dist/code-assistant` or `dist/code-assistant.app` |
-| Windows | `dist/code-assistant.exe` |
+| Linux | `dist/dev-toolbelt` |
+| macOS | `dist/dev-toolbelt` or `dist/dev-toolbelt.app` |
+| Windows | `dist/dev-toolbelt.exe` |
 
 Run the binary directly (Linux/macOS):
 
 ```bash
-./dist/code-assistant
+./dist/dev-toolbelt
 ```
 
 On macOS, if you get a `.app` bundle, open it from Finder or run:
 
 ```bash
-open dist/code-assistant.app
+open dist/dev-toolbelt.app
 ```
 
 ### Manual build
@@ -92,10 +92,10 @@ open dist/code-assistant.app
 ```bash
 source venv/bin/activate
 pip install -r requirements.txt -r requirements-dev.txt
-pyinstaller code-assistant.spec --noconfirm
+pyinstaller dev-toolbelt.spec --noconfirm
 ```
 
-Configuration lives in `code-assistant.spec` (one-file, windowed, plugins collected automatically).
+Configuration lives in `dev-toolbelt.spec` (one-file, windowed, plugins collected automatically).
 
 ### Notes
 
