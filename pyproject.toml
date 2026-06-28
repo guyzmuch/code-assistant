@@ -1,3 +1,8 @@
+[project]
+name = "dev-toolbelt"
+version = "0.1.0"
+description = "Small developer utilities for transforming text and data"
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]

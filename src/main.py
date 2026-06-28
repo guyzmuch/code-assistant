@@ -1,4 +1,7 @@
+import sys
+
 from app.main_view import create_main_view
+from app.version import __version__
 from app.window import create_root_window
 from database.connection import database_connection
 
@@ -14,4 +17,7 @@ def main():
 
 
 if __name__ == "__main__":
+    if "--version" in sys.argv:
+        print(__version__)
+        raise SystemExit(0)
     main()

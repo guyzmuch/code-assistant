@@ -2,6 +2,7 @@ import sys
 import tkinter as tk
 from tkinter import messagebox
 
+from app.version import __version__
 from app.window import WINDOW_TITLE
 
 
@@ -84,6 +85,6 @@ def create_app_menu(root, *, on_quit, on_history, on_settings) -> tk.Menu:
 def _show_about(root):
     messagebox.showinfo(
         WINDOW_TITLE,
-        f"{WINDOW_TITLE}\n\nSmall developer utilities for text and data.",
+        f"{WINDOW_TITLE} {__version__}\n\nSmall developer utilities for text and data.",
         parent=root,
     )

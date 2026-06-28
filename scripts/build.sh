@@ -15,8 +15,8 @@ pyinstaller dev-toolbelt.spec --noconfirm
 
 if [[ -f dist/dev-toolbelt.exe ]]; then
   echo "Built: dist/dev-toolbelt.exe"
-elif [[ -d dist/dev-toolbelt.app ]]; then
-  echo "Built: dist/dev-toolbelt.app"
+elif [[ -d dist/DevToolbelt.app ]]; then
+  echo "Built: dist/DevToolbelt.app"
 else
   echo "Built: dist/dev-toolbelt"
 fi

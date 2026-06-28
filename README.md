@@ -72,7 +72,7 @@ This installs dev dependencies (including PyInstaller), runs the spec file, and 
 | OS | Output |
 |----|--------|
 | Linux | `dist/dev-toolbelt` |
-| macOS | `dist/dev-toolbelt` or `dist/dev-toolbelt.app` |
+| macOS | `dist/dev-toolbelt` or `dist/DevToolbelt.app` |
 | Windows | `dist/dev-toolbelt.exe` |
 
 Run the binary directly (Linux/macOS):
@@ -84,7 +84,7 @@ Run the binary directly (Linux/macOS):
 On macOS, if you get a `.app` bundle, open it from Finder or run:
 
 ```bash
-open dist/dev-toolbelt.app
+open dist/DevToolbelt.app
 ```
 
 ### Manual build
@@ -96,6 +96,8 @@ pyinstaller dev-toolbelt.spec --noconfirm
 ```
 
 Configuration lives in `dev-toolbelt.spec` (one-file, windowed, plugins collected automatically).
+
+App version is defined in `src/app/version.py` (also shown in Help → About and via `./dist/dev-toolbelt --version`).
 
 ### Notes
 
