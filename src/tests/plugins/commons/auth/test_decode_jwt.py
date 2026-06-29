@@ -7,6 +7,13 @@ SAMPLE_JWT = (
     "signature"
 )
 
+# payload: {"sub":"user","exp":1778803200,"delivery":1355270400}
+TIMESTAMP_JWT = (
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9."
+    "eyJzdWIiOiJ1c2VyIiwiZXhwIjoxNzc4ODAzMjAwLCJkZWxpdmVyeSI6MTM1NTI3MDQwMH0."
+    "signature"
+)
+
 EXPECTED_HEADER_JSON = """{
   "alg": "HS256",
   "typ": "JWT"
@@ -85,3 +92,24 @@ class TestDecodeJwt:
 
         assert result.split("\n--- PAYLOAD\n", 1)[1] == '{"sub":"1234567890"}'
         assert "\n  " not in result
+
+    def test_extra_data_section_converts_timestamps(self, bogota_timezone):
+        plugin = DecodeJwt()
+        result = plugin.run([TIMESTAMP_JWT])[0]
+
+        assert "--- EXTRA DATA" in result
+        assert "exp: 2026-05-14 19:00:00" in result
+        assert "delivery: 2012-12-11 19:00:00" in result
+
+    def test_extra_data_omitted_when_no_timestamps(self):
+        plugin = DecodeJwt()
+        result = plugin.run([SAMPLE_JWT])[0]
+
+        assert "--- EXTRA DATA" not in result
+
+    def test_payload_only_excludes_extra_data(self, bogota_timezone):
+        plugin = DecodeJwt(options='{"payload_only": true}')
+        result = plugin.run([TIMESTAMP_JWT])[0]
+
+        assert "--- EXTRA DATA" not in result
+        assert "exp:" not in result
