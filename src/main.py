@@ -1,5 +1,6 @@
 import sys
 
+from app.branding import set_process_name
 from app.main_view import create_main_view
 from app.version import __version__
 from app.window import create_root_window
@@ -20,4 +21,5 @@ if __name__ == "__main__":
     if "--version" in sys.argv:
         print(__version__)
         raise SystemExit(0)
+    set_process_name()
     main()

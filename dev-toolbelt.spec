@@ -12,6 +12,10 @@ exec(
     _version_ns,
 )
 APP_VERSION = _version_ns["__version__"]
+ASSETS_DIR = Path(SPECPATH) / "assets"
+ICON_PNG = ASSETS_DIR / "icon.png"
+ICON_ICO = ASSETS_DIR / "icon.ico"
+ICON_ICNS = ASSETS_DIR / "icon.icns"
 
 
 def _version_tuple(version):
@@ -71,7 +75,7 @@ a = Analysis(
     ["src/main.py"],
     pathex=["src"],
     binaries=[],
-    datas=[],
+    datas=[(str(ICON_PNG), "assets")] if ICON_PNG.is_file() else [],
     hiddenimports=hiddenimports,
     hookspath=[],
     hooksconfig={},
@@ -101,6 +105,10 @@ exe_kwargs = {
 }
 if sys.platform == "win32":
     exe_kwargs["version"] = str(_windows_version_file(APP_VERSION))
+    if ICON_ICO.is_file():
+        exe_kwargs["icon"] = str(ICON_ICO)
+elif sys.platform == "darwin" and ICON_ICNS.is_file():
+    exe_kwargs["icon"] = str(ICON_ICNS)
 
 exe = EXE(
     pyz,
@@ -114,13 +122,15 @@ exe = EXE(
 )
 
 if sys.platform == "darwin":
+    bundle_icon = str(ICON_ICNS) if ICON_ICNS.is_file() else None
     app = BUNDLE(
         exe,
         name="DevToolbelt.app",
-        icon=None,
+        icon=bundle_icon,
         bundle_identifier="dev.toolbelt",
         info_plist={
             "CFBundleDisplayName": "DevToolbelt",
+            "CFBundleName": "DevToolbelt",
             "CFBundleShortVersionString": APP_VERSION,
             "CFBundleVersion": APP_VERSION,
         },

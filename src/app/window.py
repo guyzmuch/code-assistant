@@ -1,7 +1,8 @@
 import tkinter as tk
 from tkinterdnd2 import TkinterDnD
 
-WINDOW_TITLE = "DevToolbelt"
+from app.branding import WINDOW_TITLE, apply_window_branding
+
 WINDOW_HEIGHT = 650
 COMPACT_WINDOW_WIDTH = 700
 PLUGIN_PANEL_WIDTH = 200
@@ -14,6 +15,7 @@ def screen_width(root) -> int:
 def create_root_window():
     root = TkinterDnD.Tk()
     root.title(WINDOW_TITLE)
+    apply_window_branding(root)
 
     x = screen_width(root) - COMPACT_WINDOW_WIDTH
     root.geometry(f"{COMPACT_WINDOW_WIDTH}x{WINDOW_HEIGHT}+{x}+0")

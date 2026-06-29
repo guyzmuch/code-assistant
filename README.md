@@ -67,6 +67,15 @@ From the project root:
 
 This installs dev dependencies (including PyInstaller), runs the spec file, and writes output to `dist/`.
 
+After a successful build, checksum files are written to `dist/`:
+
+| File | Purpose |
+|------|---------|
+| `checksums.txt` | Human-readable SHA256 |
+| `SHA256SUMS` | Verify with `cd dist && sha256sum -c SHA256SUMS` |
+
+Run the verification from the `dist/` directory (the sums file lists the executable basename only).
+
 ### Output by platform
 
 | OS | Output |
@@ -98,6 +107,8 @@ pyinstaller dev-toolbelt.spec --noconfirm
 Configuration lives in `dev-toolbelt.spec` (one-file, windowed, plugins collected automatically).
 
 App version is defined in `src/app/version.py` (also shown in Help → About and via `./dist/dev-toolbelt --version`).
+
+App icons are static files in `assets/` (`icon.png`, `icon.ico`, and `icon.icns` on macOS).
 
 ### Notes
 
