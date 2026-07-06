@@ -15,9 +15,11 @@ class AppContext:
             self.history_panel.refresh()
 
     def repopulate_plugins(self):
+        from app.menu import repopulate_plugins_menu
         from app.plugin_panel import repopulate_plugin_buttons
 
         repopulate_plugin_buttons()
+        repopulate_plugins_menu()
 
 
 def init(db_connection, layout: MainLayout, history_panel) -> AppContext:

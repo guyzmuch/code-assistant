@@ -2,7 +2,64 @@ import sys
 import tkinter as tk
 
 from app.branding import WINDOW_TITLE
+from app.plugin_panel import make_plugin_command
+from app.plugins_loader import discover_plugin_classes
+from database.plugins_registry import fetch_configured_plugins
 from views.about_dialog import AboutDialog
+
+_plugins_menu = None
+
+
+def _display_name_for_row(row, plugin_class):
+    if row["custom_name"]:
+        return row["custom_name"]
+    return plugin_class.DEFAULT_NAME
+
+
+def populate_plugins_menu():
+    if _plugins_menu is None:
+        return
+
+    _plugins_menu.delete(0, tk.END)
+
+    plugin_classes = discover_plugin_classes()
+    plugins_by_name = {
+        plugin_class.__name__: plugin_class for plugin_class in plugin_classes
+    }
+
+    favorites_menu = tk.Menu(_plugins_menu, tearoff=0)
+    for row in fetch_configured_plugins():
+        if row["show_in_panel"]:
+            continue
+        plugin_class = plugins_by_name.get(row["name"])
+        if plugin_class is None:
+            continue
+        plugin_instance = plugin_class(
+            custom_name=row["custom_name"],
+            options=row["options"],
+            shortcut=row["shortcut"],
+            id=row["id"],
+            config_version=row["config_version"],
+        )
+        favorites_menu.add_command(
+            label=_display_name_for_row(row, plugin_class),
+            command=make_plugin_command(plugin_instance),
+        )
+    _plugins_menu.add_cascade(label="Favorites", menu=favorites_menu)
+    _plugins_menu.add_separator()
+
+    for plugin_class in sorted(
+        plugin_classes, key=lambda cls: cls.DEFAULT_NAME.lower()
+    ):
+        plugin_instance = plugin_class()
+        _plugins_menu.add_command(
+            label=plugin_class.DEFAULT_NAME,
+            command=make_plugin_command(plugin_instance),
+        )
+
+
+def repopulate_plugins_menu():
+    populate_plugins_menu()
 
 
 def _bind_accelerators(root, bindings):
@@ -11,6 +68,7 @@ def _bind_accelerators(root, bindings):
 
 
 def create_app_menu(root, *, on_quit, on_history, on_settings) -> tk.Menu:
+    global _plugins_menu
     menubar = tk.Menu(root)
     is_macos = sys.platform == "darwin"
     mod = "Cmd" if is_macos else "Ctrl"
@@ -45,6 +103,10 @@ def create_app_menu(root, *, on_quit, on_history, on_settings) -> tk.Menu:
         accelerator=f"{mod}+Shift+H",
     )
     menubar.add_cascade(label="View", menu=view_menu)
+
+    _plugins_menu = tk.Menu(menubar, tearoff=0)
+    menubar.add_cascade(label="Plugins", menu=_plugins_menu)
+    populate_plugins_menu()
 
     settings_menu = tk.Menu(menubar, tearoff=0)
     settings_menu.add_command(label="Settings…", command=on_settings)
