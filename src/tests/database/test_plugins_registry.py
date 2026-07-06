@@ -33,6 +33,7 @@ def test_create_plugin_uses_defaults_for_optional_fields():
     assert row["options"] == "{}"
     assert row["config_version"] == 1
     assert row["archived"] == 0
+    assert row["show_in_panel"] == 1
 
 
 def test_create_plugin_returns_new_row():
@@ -47,10 +48,13 @@ def test_create_plugin_returns_new_row():
 def test_update_plugin_increments_config_version():
     memory_db()
     row = create_plugin("SamplePlugin", "v1", "{}")
-    updated = update_plugin(row["id"], "v2", '{"a": 1}')
+    updated = update_plugin(
+        row["id"], "v2", '{"a": 1}', show_in_panel=False
+    )
 
     assert updated["custom_name"] == "v2"
     assert updated["options"] == '{"a": 1}'
+    assert updated["show_in_panel"] == 0
     assert updated["config_version"] == 2
 
 

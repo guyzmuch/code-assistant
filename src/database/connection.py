@@ -6,6 +6,18 @@ from paths import USER_DATA_DIR
 PLUGINS_DB_PATH = USER_DATA_DIR / "plugins.db"
 
 
+def _table_columns(cursor, table):
+    cursor.execute(f"PRAGMA table_info({table})")
+    return {row[1] for row in cursor.fetchall()}
+
+
+def _ensure_column(cursor, table, column, definition):
+    if column not in _table_columns(cursor, table):
+        cursor.execute(
+            f"ALTER TABLE {table} ADD COLUMN {column} {definition}"
+        )
+
+
 def init_schema(db_connection):
     cursor = db_connection.cursor()
     try:
@@ -17,8 +29,16 @@ def init_schema(db_connection):
             options TEXT,
             shortcut TEXT,
             config_version INTEGER,
-            archived INTEGER
+            archived INTEGER,
+            show_in_panel INTEGER NOT NULL DEFAULT 1
         )""")
+
+        _ensure_column(
+            cursor,
+            "plugins",
+            "show_in_panel",
+            "INTEGER NOT NULL DEFAULT 1",
+        )
 
         cursor.execute("""
         CREATE TABLE IF NOT EXISTS plugin_history (

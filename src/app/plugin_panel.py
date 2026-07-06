@@ -38,6 +38,9 @@ def populate_plugin_buttons():
 
     row = 0
     for plugin_from_database in plugins_from_database:
+        if not plugin_from_database["show_in_panel"]:
+            continue
+
         if plugin_from_database["name"] not in plugins_dict:
             print(
                 "Plugin from database not found in plugins: ",

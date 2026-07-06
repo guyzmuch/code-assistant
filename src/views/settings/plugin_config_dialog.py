@@ -32,7 +32,6 @@ class PluginConfigDialog(tk.Toplevel):
         body = ttk.Frame(self, padding=10)
         body.pack(fill=tk.BOTH, expand=True)
         body.columnconfigure(1, weight=1)
-        body.rowconfigure(3, weight=1)
 
         ttk.Label(body, text="Plugin:").grid(
             row=0, column=0, sticky="w", pady=(0, 4)
@@ -49,6 +48,17 @@ class PluginConfigDialog(tk.Toplevel):
         name_entry = ttk.Entry(body, textvariable=self._name_var)
         name_entry.grid(row=1, column=1, sticky="ew", pady=4)
 
+        self._show_in_panel_var = tk.BooleanVar(value=True)
+        ttk.Checkbutton(
+            body,
+            text="Show in plugin panel",
+            variable=self._show_in_panel_var,
+        ).grid(row=2, column=0, columnspan=2, sticky="w", pady=4)
+
+        ttk.Separator(body, orient=tk.HORIZONTAL).grid(
+            row=3, column=0, columnspan=2, sticky="ew", pady=(8, 8)
+        )
+
         schema = getattr(plugin_class, "DEFAULT_OPTIONS_SCHEMA", None)
         self._uses_form = bool(schema)
 
@@ -60,11 +70,12 @@ class PluginConfigDialog(tk.Toplevel):
                 body, schema, values=existing_values
             )
             self._options_form.grid(
-                row=3, column=0, columnspan=2, sticky="nsew", pady=4
+                row=4, column=0, columnspan=2, sticky="nsew", pady=4
             )
+            options_end_row = 4
         else:
             ttk.Label(body, text="Options (JSON):").grid(
-                row=2, column=0, sticky="nw", pady=4
+                row=4, column=0, sticky="nw", pady=4
             )
             self._options_text = scrolledtext.ScrolledText(
                 body,
@@ -75,11 +86,16 @@ class PluginConfigDialog(tk.Toplevel):
                 insertbackground="black",
             )
             self._options_text.grid(
-                row=3, column=0, columnspan=2, sticky="nsew", pady=4
+                row=5, column=0, columnspan=2, sticky="nsew", pady=4
             )
+            options_end_row = 5
+
+        body.rowconfigure(options_end_row, weight=1)
 
         buttons = ttk.Frame(body)
-        buttons.grid(row=4, column=0, columnspan=2, sticky="e", pady=(10, 0))
+        buttons.grid(
+            row=options_end_row + 1, column=0, columnspan=2, sticky="e", pady=(10, 0)
+        )
         ttk.Button(buttons, text="Cancel", command=self.destroy).pack(
             side=tk.RIGHT, padx=(6, 0)
         )
@@ -87,6 +103,7 @@ class PluginConfigDialog(tk.Toplevel):
 
         if self._is_edit:
             self._name_var.set(plugin_row["custom_name"] or "")
+            self._show_in_panel_var.set(bool(plugin_row["show_in_panel"]))
             if not self._uses_form:
                 self._options_text.insert("1.0", plugin_row["options"] or "{}")
         else:
@@ -114,17 +131,21 @@ class PluginConfigDialog(tk.Toplevel):
         else:
             options = self._options_text.get("1.0", "end-1c")
 
+        show_in_panel = self._show_in_panel_var.get()
+
         if self._is_edit:
             update_plugin(
                 self._plugin_row["id"],
                 custom_name,
                 options,
+                show_in_panel=show_in_panel,
             )
         else:
             create_plugin(
                 self._plugin_class.__name__,
                 custom_name,
                 options,
+                show_in_panel=show_in_panel,
             )
 
         self._on_saved()
