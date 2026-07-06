@@ -4,7 +4,8 @@ import tkinter as tk
 from app.branding import WINDOW_TITLE
 from app.plugin_panel import make_plugin_command
 from app.plugins_loader import discover_plugin_classes
-from database.plugins_registry import fetch_configured_plugins
+from app.recent_plugins import RecentPluginEntry, get_recent_plugins
+from database.plugins_registry import fetch_configured_plugins, get_plugin_by_id
 from views.about_dialog import AboutDialog
 
 _plugins_menu = None
@@ -14,6 +15,43 @@ def _display_name_for_row(row, plugin_class):
     if row["custom_name"]:
         return row["custom_name"]
     return plugin_class.DEFAULT_NAME
+
+
+def _label_for_recent_entry(entry: RecentPluginEntry, plugins_by_name):
+    if entry.plugin_id is not None:
+        plugin_row = get_plugin_by_id(entry.plugin_id)
+        if plugin_row is not None:
+            plugin_class = plugins_by_name.get(plugin_row["name"])
+            if plugin_class is not None:
+                if plugin_row["custom_name"]:
+                    return plugin_row["custom_name"]
+                return plugin_class.DEFAULT_NAME
+    plugin_class = plugins_by_name.get(entry.plugin_name)
+    if plugin_class is not None:
+        return plugin_class.DEFAULT_NAME
+    return entry.plugin_name
+
+
+def _plugin_instance_from_recent_entry(entry: RecentPluginEntry, plugins_by_name):
+    if entry.plugin_id is not None:
+        plugin_row = get_plugin_by_id(entry.plugin_id)
+        if plugin_row is None:
+            return None
+        plugin_class = plugins_by_name.get(plugin_row["name"])
+        if plugin_class is None:
+            return None
+        return plugin_class(
+            custom_name=plugin_row["custom_name"],
+            options=plugin_row["options"],
+            shortcut=plugin_row["shortcut"],
+            id=plugin_row["id"],
+            config_version=plugin_row["config_version"],
+        )
+
+    plugin_class = plugins_by_name.get(entry.plugin_name)
+    if plugin_class is None:
+        return None
+    return plugin_class()
 
 
 def populate_plugins_menu():
@@ -26,6 +64,19 @@ def populate_plugins_menu():
     plugins_by_name = {
         plugin_class.__name__: plugin_class for plugin_class in plugin_classes
     }
+
+    recent_menu = tk.Menu(_plugins_menu, tearoff=0)
+    for entry in get_recent_plugins():
+        plugin_instance = _plugin_instance_from_recent_entry(
+            entry, plugins_by_name
+        )
+        if plugin_instance is None:
+            continue
+        recent_menu.add_command(
+            label=_label_for_recent_entry(entry, plugins_by_name),
+            command=make_plugin_command(plugin_instance),
+        )
+    _plugins_menu.add_cascade(label="Recent", menu=recent_menu)
 
     favorites_menu = tk.Menu(_plugins_menu, tearoff=0)
     for row in fetch_configured_plugins():

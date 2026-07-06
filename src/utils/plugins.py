@@ -1,4 +1,5 @@
 from app.context import get, refresh_history_if_visible
+from app.recent_plugins import record_plugin_run
 from database.plugin_history import save_plugin_execution
 from plugins.plugin import Plugin
 from utils.ui import split_lines
@@ -20,4 +21,8 @@ def plugin_entrance(plugin: Plugin):
         output_text,
         plugin.config_version,
     )
+    record_plugin_run(plugin)
     refresh_history_if_visible()
+    from app.menu import repopulate_plugins_menu
+
+    repopulate_plugins_menu()
