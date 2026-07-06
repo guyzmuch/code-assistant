@@ -49,3 +49,21 @@ class TestJoinBySeparator:
         result = plugin.run(["apple", "", "  ", "banana"])
 
         assert result == ["apple,,,banana"]
+
+    def test_add_double_quotes_between_each_item(self):
+        plugin = JoinBySeparator(options='{"item_wrap": "\\""}')
+        result = plugin.run(["apple", "banana", "cherry"])
+
+        assert result == ['"apple","banana","cherry"']
+
+    def test_add_single_quotes_between_each_item(self):
+        plugin = JoinBySeparator(options='{"item_wrap": "\'"}')
+        result = plugin.run(["apple", "banana", "cherry"])
+
+        assert result == ["'apple','banana','cherry'"]
+
+    def test_add_character_between_each_item(self):
+        plugin = JoinBySeparator(options='{"item_wrap": "foo"}')
+        result = plugin.run(["apple", "banana", "cherry"])
+
+        assert result == ['fooapplefoo,foobananafoo,foocherryfoo']
