@@ -33,6 +33,15 @@ def apply_for_all_lines(lines, function):
     return output_list
 
 
+def remove_empty_lines(lines):
+    result = []
+    for line in lines:
+        if not line.strip():
+            continue
+        result.append(line)
+    return result
+
+
 def flatten_and_remove_empty_lines(output_list):
     flattened_list = []
     for sublist in output_list:

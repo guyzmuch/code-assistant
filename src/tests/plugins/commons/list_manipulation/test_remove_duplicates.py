@@ -20,8 +20,26 @@ class TestRemoveDuplicates:
 
         assert result == []
 
-    def test_treats_lines_as_exact_values(self):
+    def test_trims_lines_before_deduplicating(self):
         plugin = RemoveDuplicates()
+        result = plugin.run(["apple", " apple", "apple "])
+
+        assert result == ["apple"]
+
+    def test_treats_lines_as_exact_values_when_trim_disabled(self):
+        plugin = RemoveDuplicates(options='{"trim": false}')
         result = plugin.run(["apple", " apple", "apple"])
 
         assert result == ["apple", " apple"]
+
+    def test_removes_empty_lines_by_default(self):
+        plugin = RemoveDuplicates()
+        result = plugin.run(["apple", "", "   ", "banana", ""])
+
+        assert result == ["apple", "banana"]
+
+    def test_keeps_empty_lines_when_disabled(self):
+        plugin = RemoveDuplicates(options='{"remove_empty_lines": false}')
+        result = plugin.run(["apple", "", "banana"])
+
+        assert result == ["apple", "", "banana"]

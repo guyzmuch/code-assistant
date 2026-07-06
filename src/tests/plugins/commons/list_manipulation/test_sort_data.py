@@ -25,3 +25,27 @@ class TestSortData:
         result = plugin.run([])
 
         assert result == []
+
+    def test_trims_lines_before_sorting(self):
+        plugin = SortData()
+        result = plugin.run(["  cherry  ", " apple", "banana "])
+
+        assert result == ["apple", "banana", "cherry"]
+
+    def test_removes_empty_lines_by_default(self):
+        plugin = SortData()
+        result = plugin.run(["cherry", "", "   ", "apple"])
+
+        assert result == ["apple", "cherry"]
+
+    def test_keeps_empty_lines_when_disabled(self):
+        plugin = SortData(options='{"remove_empty_lines": false}')
+        result = plugin.run(["cherry", "", "apple"])
+
+        assert result == ["", "apple", "cherry"]
+
+    def test_keeps_whitespace_when_trim_disabled(self):
+        plugin = SortData(options='{"trim": false}')
+        result = plugin.run(["  cherry  ", " apple"])
+
+        assert result == ["  cherry  ", " apple"]

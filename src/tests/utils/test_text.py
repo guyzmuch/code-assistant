@@ -4,8 +4,9 @@ from utils.text import (
     apply_for_all_lines,
     first_non_empty_line,
     flatten_and_remove_empty_lines,
-    require_input,
     merge_lines_into_one,
+    remove_empty_lines,
+    require_input,
 )
 
 
@@ -57,6 +58,16 @@ class TestApplyForAllLines:
         result = apply_for_all_lines(["1", "bad"], int)
         assert result[0] == 1
         assert result[1] == "Error: invalid literal for int() with base 10: 'bad'"
+
+
+class TestRemoveEmptyLines:
+    def test_removes_empty_and_whitespace_only_lines(self):
+        result = remove_empty_lines(["a", "", "   ", "b"])
+        assert result == ["a", "b"]
+
+    def test_keeps_lines_with_content(self):
+        result = remove_empty_lines(["  a  ", "b"])
+        assert result == ["  a  ", "b"]
 
 
 class TestFlattenAndRemoveEmptyLines:
