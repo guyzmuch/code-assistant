@@ -1,8 +1,10 @@
+import json
 import tkinter as tk
 import tkinter.scrolledtext as scrolledtext
 from tkinter import ttk
 
 from database.plugins_registry import create_plugin, update_plugin
+from views.settings.options_form import OptionsForm
 
 
 class PluginConfigDialog(tk.Toplevel):
@@ -47,20 +49,34 @@ class PluginConfigDialog(tk.Toplevel):
         name_entry = ttk.Entry(body, textvariable=self._name_var)
         name_entry.grid(row=1, column=1, sticky="ew", pady=4)
 
-        ttk.Label(body, text="Options (JSON):").grid(
-            row=2, column=0, sticky="nw", pady=4
-        )
-        self._options_text = scrolledtext.ScrolledText(
-            body,
-            height=12,
-            width=50,
-            bg="white",
-            fg="black",
-            insertbackground="black",
-        )
-        self._options_text.grid(
-            row=3, column=0, columnspan=2, sticky="nsew", pady=4
-        )
+        schema = getattr(plugin_class, "DEFAULT_OPTIONS_SCHEMA", None)
+        self._uses_form = bool(schema)
+
+        if self._uses_form:
+            existing_values = self._parse_options(
+                plugin_row["options"] if self._is_edit else None
+            )
+            self._options_form = OptionsForm(
+                body, schema, values=existing_values
+            )
+            self._options_form.grid(
+                row=3, column=0, columnspan=2, sticky="nsew", pady=4
+            )
+        else:
+            ttk.Label(body, text="Options (JSON):").grid(
+                row=2, column=0, sticky="nw", pady=4
+            )
+            self._options_text = scrolledtext.ScrolledText(
+                body,
+                height=12,
+                width=50,
+                bg="white",
+                fg="black",
+                insertbackground="black",
+            )
+            self._options_text.grid(
+                row=3, column=0, columnspan=2, sticky="nsew", pady=4
+            )
 
         buttons = ttk.Frame(body)
         buttons.grid(row=4, column=0, columnspan=2, sticky="e", pady=(10, 0))
@@ -71,17 +87,32 @@ class PluginConfigDialog(tk.Toplevel):
 
         if self._is_edit:
             self._name_var.set(plugin_row["custom_name"] or "")
-            self._options_text.insert("1.0", plugin_row["options"] or "{}")
+            if not self._uses_form:
+                self._options_text.insert("1.0", plugin_row["options"] or "{}")
         else:
             self._name_var.set(plugin_class.DEFAULT_NAME)
-            self._options_text.insert("1.0", "{}")
+            if not self._uses_form:
+                self._options_text.insert("1.0", "{}")
 
         self.geometry("500x400")
         name_entry.focus_set()
 
+    @staticmethod
+    def _parse_options(options):
+        if not options:
+            return {}
+        try:
+            parsed = json.loads(options)
+        except (json.JSONDecodeError, TypeError):
+            return {}
+        return parsed if isinstance(parsed, dict) else {}
+
     def _save(self):
         custom_name = self._name_var.get()
-        options = self._options_text.get("1.0", "end-1c")
+        if self._uses_form:
+            options = json.dumps(self._options_form.get_values())
+        else:
+            options = self._options_text.get("1.0", "end-1c")
 
         if self._is_edit:
             update_plugin(

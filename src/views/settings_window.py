@@ -23,8 +23,8 @@ class SettingsWindow(tk.Toplevel):
 
         self._general_tab = ttk.Frame(notebook, padding=10)
         self._plugins_tab = ttk.Frame(notebook, padding=10)
-        notebook.add(self._general_tab, text="General")
         notebook.add(self._plugins_tab, text="Plugins")
+        notebook.add(self._general_tab, text="General")
 
         self._build_general_tab()
         self._build_plugins_tab()

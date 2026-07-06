@@ -2,6 +2,28 @@ import ast
 import json
 from abc import ABC, abstractmethod
 
+_TYPE_FALLBACKS = {
+    "string": "",
+    "number": 0,
+    "boolean": False,
+}
+
+
+def _schema_defaults(schema):
+    """Build the default options dict from a DEFAULT_OPTIONS_SCHEMA."""
+    defaults = {}
+    for name, field in schema.items():
+        if "default" in field:
+            defaults[name] = field["default"]
+            continue
+        field_type = field.get("type", "string")
+        if field_type == "select":
+            choices = field.get("choices") or []
+            defaults[name] = choices[0] if choices else ""
+        else:
+            defaults[name] = _TYPE_FALLBACKS.get(field_type, "")
+    return defaults
+
 
 class Plugin(ABC):
     DEFAULT_NAME = None
@@ -29,7 +51,16 @@ class Plugin(ABC):
         self.config_version = config_version
         self.name = self.custom_name if self.custom_name else cls.DEFAULT_NAME
         self.description = self.get_description()
-        self.options = {**cls.DEFAULT_OPTIONS, **self._parse_options(options)}
+        self.options = {**self._default_options(), **self._parse_options(options)}
+
+    # Prefer schema-derived defaults when the plugin defines a schema,
+    # otherwise fall back to the plain DEFAULT_OPTIONS dict.
+    def _default_options(self):
+        cls = type(self)
+        schema = getattr(cls, "DEFAULT_OPTIONS_SCHEMA", None)
+        if schema:
+            return _schema_defaults(schema)
+        return dict(cls.DEFAULT_OPTIONS)
 
     # parse the options from a string to a dictionary
     def _parse_options(self, options):

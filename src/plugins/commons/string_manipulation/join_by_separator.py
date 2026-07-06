@@ -3,11 +3,31 @@ from plugins.plugin import Plugin
 
 class JoinBySeparator(Plugin):
     DEFAULT_NAME = "Join by separator"
-    DEFAULT_OPTIONS = {
-        "separator": ",",
-        "trim": True,
-        "skip_empty_lines": True,
-        "item_wrap": "",
+    DEFAULT_OPTIONS_SCHEMA = {
+        "separator": {
+            "type": "string",
+            "label": "Separator",
+            "description": "Text inserted between items",
+            "default": ",",
+        },
+        "item_wrap": {
+            "type": "string",
+            "label": "Item wrap",
+            "description": "Character wrapping each item",
+            "default": "",
+        },
+        "trim": {
+            "type": "boolean",
+            "label": "Trim whitespace",
+            "description": "Strip spaces around each line",
+            "default": True,
+        },
+        "skip_empty_lines": {
+            "type": "boolean",
+            "label": "Skip empty lines",
+            "description": "Skip empty lines",
+            "default": True,
+        },
     }
 
     def get_description(self):
