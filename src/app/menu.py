@@ -155,13 +155,13 @@ def create_app_menu(root, *, on_quit, on_history, on_settings) -> tk.Menu:
     )
     menubar.add_cascade(label="View", menu=view_menu)
 
-    _plugins_menu = tk.Menu(menubar, tearoff=0)
-    menubar.add_cascade(label="Plugins", menu=_plugins_menu)
-    populate_plugins_menu()
-
     settings_menu = tk.Menu(menubar, tearoff=0)
     settings_menu.add_command(label="Settings…", command=on_settings)
     menubar.add_cascade(label="Settings", menu=settings_menu)
+
+    _plugins_menu = tk.Menu(menubar, tearoff=0)
+    menubar.add_cascade(label="Plugins", menu=_plugins_menu)
+    populate_plugins_menu()
 
     help_menu = tk.Menu(menubar, tearoff=0)
     help_menu.add_command(
