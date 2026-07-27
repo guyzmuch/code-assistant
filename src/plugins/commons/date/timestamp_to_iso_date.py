@@ -1,12 +1,13 @@
 import datetime
 from zoneinfo import ZoneInfo
 
-from plugins.plugin import Plugin
+from plugins.plugin import IoMode, Plugin
 from utils.text import apply_for_all_lines
 
 
 class TimestampToIsoDate(Plugin):
     DEFAULT_NAME = "Timestamp to ISO date"
+    IO_MODE = IoMode.SAME_COUNT
     DEFAULT_OPTIONS = {"timezone": "local", "hide_offset": True}
 
     def get_description(self):

@@ -19,8 +19,8 @@ class IoMode(Enum):
     ONE_TO_MANY = "one_to_many"  # one input → several outputs
     SAME_COUNT = "same_count"  # n inputs → n outputs
     ONE_TO_ONE = "one_to_one"  # one input → one output
-    OTHER = "other"  # known, but does not fit the above
     ANY_TO_ANY = "any_to_any"  # 1-or-many inputs → 1-or-many outputs
+    OTHER = "other"  # known, but does not fit the above
 
 
 def _schema_defaults(schema):
@@ -46,12 +46,13 @@ class Plugin(ABC, Runnable):
 
     def __init_subclass__(cls, **kwargs):
         # Runs when a subclass is defined (import time). Every plugin must set
-        # DEFAULT_NAME so the loader/UI can identify it; fail early, not at runtime.
-        # IO_MODE will become required once existing plugins are migrated.
+        # DEFAULT_NAME and IO_MODE so the loader/UI can identify it; fail early.
         super().__init_subclass__(**kwargs)
         if cls.DEFAULT_NAME is None:
             raise TypeError(f"{cls.__name__} must define DEFAULT_NAME")
-        if cls.IO_MODE is not None and not isinstance(cls.IO_MODE, IoMode):
+        if cls.IO_MODE is None:
+            raise TypeError(f"{cls.__name__} must define IO_MODE")
+        if not isinstance(cls.IO_MODE, IoMode):
             raise TypeError(f"{cls.__name__}.IO_MODE must be an IoMode")
 
     def __init__(

@@ -1,8 +1,9 @@
-from plugins.plugin import Plugin
+from plugins.plugin import IoMode, Plugin
 
 
 class JoinBySeparator(Plugin):
     DEFAULT_NAME = "Join by separator"
+    IO_MODE = IoMode.MANY_TO_ONE
     DEFAULT_OPTIONS_SCHEMA = {
         "separator": {
             "type": "string",

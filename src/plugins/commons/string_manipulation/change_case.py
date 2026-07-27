@@ -1,4 +1,4 @@
-from plugins.plugin import Plugin
+from plugins.plugin import IoMode, Plugin
 from utils.text import apply_for_all_lines
 
 _CASE_TRANSFORMERS = {
@@ -10,6 +10,7 @@ _CASE_TRANSFORMERS = {
 
 class ChangeCase(Plugin):
     DEFAULT_NAME = "Change case"
+    IO_MODE = IoMode.SAME_COUNT
     DEFAULT_OPTIONS_SCHEMA = {
         "case": {
             "type": "select",

@@ -1,8 +1,9 @@
-from plugins.plugin import Plugin
+from plugins.plugin import IoMode, Plugin
 
 
 class CountLines(Plugin):
     DEFAULT_NAME = "Count lines"
+    IO_MODE = IoMode.MANY_TO_ONE
 
     def get_description(self):
         return "Count the number of input lines"

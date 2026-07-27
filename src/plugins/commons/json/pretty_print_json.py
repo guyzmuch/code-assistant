@@ -1,6 +1,6 @@
 import json
 
-from plugins.plugin import Plugin
+from plugins.plugin import IoMode, Plugin
 from utils.format import format_error, json_dumps, parse_json_lenient
 from utils.text import merge_lines_into_one
 
@@ -25,6 +25,7 @@ def _extract_json_text(text: str) -> str:
 
 class PrettyPrintJson(Plugin):
     DEFAULT_NAME = "Pretty-print JSON"
+    IO_MODE = IoMode.MANY_TO_ONE
 
     def get_description(self):
         return "Parse JSON from input and pretty-print it"

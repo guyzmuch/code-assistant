@@ -1,4 +1,4 @@
-from plugins.plugin import Plugin
+from plugins.plugin import IoMode, Plugin
 from utils.text import apply_for_all_lines, flatten_and_remove_empty_lines
 
 QUOTE_CHARS = "\"'`‘’“”"
@@ -10,6 +10,7 @@ def _strip_quotes(value):
 
 class SplitBySeparator(Plugin):
     DEFAULT_NAME = "Split by separator"
+    IO_MODE = IoMode.ONE_TO_MANY
     DEFAULT_OPTIONS = {"separator": ",", "trim": True, "strip_quotes": False}
 
     def get_description(self):

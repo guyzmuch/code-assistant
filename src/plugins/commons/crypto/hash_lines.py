@@ -1,7 +1,7 @@
 import hashlib
 import hmac
 
-from plugins.plugin import Plugin
+from plugins.plugin import IoMode, Plugin
 from utils.format import format_error
 from utils.text import apply_for_all_lines
 
@@ -33,6 +33,7 @@ def hash_line(
 
 class HashLines(Plugin):
     DEFAULT_NAME = "Hash lines"
+    IO_MODE = IoMode.SAME_COUNT
     DEFAULT_OPTIONS = {
         "algorithm": "sha256",
         "prefix": "",

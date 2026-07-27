@@ -1,6 +1,6 @@
 import re
 
-from plugins.plugin import Plugin
+from plugins.plugin import IoMode, Plugin
 from utils.text import apply_for_all_lines
 
 _VALUE_PLACEHOLDER = re.compile(r"\{value_(\d+)\}")
@@ -20,6 +20,7 @@ def substitute_values(template: str, values: list[str]) -> str:
 
 class ApplyTemplate(Plugin):
     DEFAULT_NAME = "Apply template"
+    IO_MODE = IoMode.ANY_TO_ANY
     DEFAULT_OPTIONS = {
         "template": ["{value_1}"],
     }

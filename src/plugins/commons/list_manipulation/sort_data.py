@@ -1,9 +1,10 @@
-from plugins.plugin import Plugin
+from plugins.plugin import IoMode, Plugin
 from utils.text import remove_empty_lines
 
 
 class SortData(Plugin):
     DEFAULT_NAME = "Sort data"
+    IO_MODE = IoMode.SAME_COUNT
     DEFAULT_OPTIONS = {
         "reverse": False,
         "trim": True,

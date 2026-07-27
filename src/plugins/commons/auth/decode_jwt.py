@@ -2,7 +2,7 @@ import base64
 import datetime
 import json
 
-from plugins.plugin import Plugin
+from plugins.plugin import IoMode, Plugin
 from utils.format import format_error, format_section, json_dumps
 from utils.text import first_non_empty_line
 
@@ -85,6 +85,7 @@ def _format_jwt(token: str, options: dict) -> str:
 
 class DecodeJwt(Plugin):
     DEFAULT_NAME = "Decode JWT"
+    IO_MODE = IoMode.ONE_TO_ONE
     DEFAULT_OPTIONS = {"payload_only": False, "pretty": True}
 
     def get_description(self):

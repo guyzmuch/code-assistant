@@ -1,6 +1,6 @@
 from urllib.parse import parse_qs, urlparse
 
-from plugins.plugin import Plugin
+from plugins.plugin import IoMode, Plugin
 from utils.format import format_error, json_dumps
 from utils.text import merge_lines_into_one
 
@@ -18,6 +18,7 @@ def _query_to_object(query_string: str) -> dict:
 
 class ParseUrl(Plugin):
     DEFAULT_NAME = "Parse URL to JSON"
+    IO_MODE = IoMode.ONE_TO_ONE
     DEFAULT_OPTIONS = {"query_only": False, "pretty": True}
 
     def get_description(self):

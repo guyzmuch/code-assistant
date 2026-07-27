@@ -1,4 +1,4 @@
-from plugins.plugin import Plugin
+from plugins.plugin import IoMode, Plugin
 
 
 def _should_count(char, exclude_spaces, exclude_symbols):
@@ -11,6 +11,7 @@ def _should_count(char, exclude_spaces, exclude_symbols):
 
 class CountCharacters(Plugin):
     DEFAULT_NAME = "Count characters"
+    IO_MODE = IoMode.MANY_TO_ONE
     DEFAULT_OPTIONS = {"exclude_spaces": False, "exclude_symbols": False}
 
     def get_description(self):

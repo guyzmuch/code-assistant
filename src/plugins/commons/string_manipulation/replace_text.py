@@ -1,7 +1,7 @@
 import ast
 import re
 
-from plugins.plugin import Plugin
+from plugins.plugin import IoMode, Plugin
 from utils.format import format_error
 from utils.text import apply_for_all_lines
 
@@ -42,6 +42,7 @@ def replace_in_line(
 
 class ReplaceText(Plugin):
     DEFAULT_NAME = "Replace text"
+    IO_MODE = IoMode.SAME_COUNT
     DEFAULT_OPTIONS_SCHEMA = {
         "search": {
             "type": "string",

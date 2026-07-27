@@ -1,12 +1,13 @@
 import re
 
-from plugins.plugin import Plugin
+from plugins.plugin import IoMode, Plugin
 from utils.format import format_error
 from utils.text import apply_for_all_lines
 
 
 class ValidateByRegex(Plugin):
     DEFAULT_NAME = "Validate by regex"
+    IO_MODE = IoMode.SAME_COUNT
     DEFAULT_OPTIONS = {"regex": ""}
 
     def get_description(self):
