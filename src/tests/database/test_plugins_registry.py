@@ -5,12 +5,13 @@ from database.plugins_registry import (
     fetch_configured_plugins,
     update_plugin,
 )
-from plugins.plugin import Plugin
+from plugins.plugin import IoMode, Plugin
 from tests.database.conftest import memory_db
 
 
 class _SamplePlugin(Plugin):
     DEFAULT_NAME = "Sample Plugin"
+    IO_MODE = IoMode.OTHER
 
     def get_description(self):
         return "test"

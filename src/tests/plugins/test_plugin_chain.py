@@ -1,9 +1,10 @@
-from plugins.plugin import Plugin
+from plugins.plugin import IoMode, Plugin
 from plugins.plugin_chain import PluginChain
 
 
 class _FakePlugin(Plugin):
     DEFAULT_NAME = "Fake"
+    IO_MODE = IoMode.SAME_COUNT
 
     def __init__(self, transform, **kwargs):
         super().__init__(**kwargs)
@@ -99,3 +100,9 @@ def test_plugin_execute_records_single_standalone_execution():
     # Raw line lists are passed to the recorder (it joins to text on write).
     assert input_data == ["ab", "cd"]
     assert output_data == ["AB", "CD"]
+
+
+def test_chain_io_mode_is_any_to_any():
+    chain = PluginChain(custom_name="Any")
+    assert chain.IO_MODE is IoMode.ANY_TO_ANY
+    assert chain.get_io_mode() is IoMode.ANY_TO_ANY

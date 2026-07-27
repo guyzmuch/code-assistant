@@ -1,10 +1,11 @@
 import pytest
 
-from plugins.plugin import Plugin
+from plugins.plugin import IoMode, Plugin
 
 
 class _ExamplePlugin(Plugin):
     DEFAULT_NAME = "Example Plugin"
+    IO_MODE = IoMode.SAME_COUNT
     DEFAULT_OPTIONS = {"separator": ","}
 
     def get_description(self):
@@ -19,11 +20,46 @@ class TestDefaultName:
         with pytest.raises(TypeError, match="must define DEFAULT_NAME"):
 
             class _InvalidPlugin(Plugin):
+                IO_MODE = IoMode.OTHER
+
                 def get_description(self):
                     return ""
 
                 def run(self, user_input_list):
                     return []
+
+
+class TestIoMode:
+    def test_non_enum_io_mode_raises_at_class_definition(self):
+        with pytest.raises(TypeError, match="IO_MODE must be an IoMode"):
+
+            class _InvalidPlugin(Plugin):
+                DEFAULT_NAME = "Invalid"
+                IO_MODE = "one_to_one"
+
+                def get_description(self):
+                    return ""
+
+                def run(self, user_input_list):
+                    return []
+
+    def test_io_mode_is_available_on_class(self):
+        assert _ExamplePlugin.IO_MODE is IoMode.SAME_COUNT
+
+    def test_get_io_mode_returns_declared_mode(self):
+        assert _ExamplePlugin().get_io_mode() is IoMode.SAME_COUNT
+
+    def test_get_io_mode_returns_none_when_unset(self):
+        class _UnsetIoModePlugin(Plugin):
+            DEFAULT_NAME = "Unset"
+
+            def get_description(self):
+                return ""
+
+            def run(self, user_input_list):
+                return []
+
+        assert _UnsetIoModePlugin().get_io_mode() is None
 
 
 class TestName:
@@ -66,6 +102,7 @@ class TestOptions:
 
 class _SchemaPlugin(Plugin):
     DEFAULT_NAME = "Schema Plugin"
+    IO_MODE = IoMode.SAME_COUNT
     DEFAULT_OPTIONS = {"ignored": "should not be used"}
     DEFAULT_OPTIONS_SCHEMA = {
         "separator": {"type": "string", "default": ","},

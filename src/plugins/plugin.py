@@ -1,6 +1,7 @@
 import ast
 import json
 from abc import ABC, abstractmethod
+from enum import Enum
 
 from plugins.runnable import Runnable
 
@@ -9,6 +10,17 @@ _TYPE_FALLBACKS = {
     "number": 0,
     "boolean": False,
 }
+
+
+class IoMode(Enum):
+    """How a plugin maps input lines to output lines."""
+
+    MANY_TO_ONE = "many_to_one"  # several inputs → one output
+    ONE_TO_MANY = "one_to_many"  # one input → several outputs
+    SAME_COUNT = "same_count"  # n inputs → n outputs
+    ONE_TO_ONE = "one_to_one"  # one input → one output
+    OTHER = "other"  # known, but does not fit the above
+    ANY_TO_ANY = "any_to_any"  # 1-or-many inputs → 1-or-many outputs
 
 
 def _schema_defaults(schema):
@@ -29,14 +41,18 @@ def _schema_defaults(schema):
 
 class Plugin(ABC, Runnable):
     DEFAULT_NAME = None
+    IO_MODE = None
     DEFAULT_OPTIONS = {}
 
     def __init_subclass__(cls, **kwargs):
         # Runs when a subclass is defined (import time). Every plugin must set
         # DEFAULT_NAME so the loader/UI can identify it; fail early, not at runtime.
+        # IO_MODE will become required once existing plugins are migrated.
         super().__init_subclass__(**kwargs)
         if cls.DEFAULT_NAME is None:
             raise TypeError(f"{cls.__name__} must define DEFAULT_NAME")
+        if cls.IO_MODE is not None and not isinstance(cls.IO_MODE, IoMode):
+            raise TypeError(f"{cls.__name__}.IO_MODE must be an IoMode")
 
     def __init__(
         self,
@@ -87,6 +103,10 @@ class Plugin(ABC, Runnable):
 
     def get_name(self):
         return self.name
+
+    def get_io_mode(self):
+        """Return this plugin's declared IoMode."""
+        return type(self).IO_MODE
 
     def execute(self, user_input_list, history_recorder):
         """Run this plugin and record a single standalone execution.

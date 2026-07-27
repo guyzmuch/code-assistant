@@ -1,3 +1,4 @@
+from plugins.plugin import IoMode
 from plugins.runnable import Runnable
 
 DEFAULT_CHAIN_NAME = "Chain"
@@ -10,7 +11,12 @@ class PluginChain(Runnable):
     Plugin): it is not itself a transformation plugin, but it implements the
     shared Runnable interface (get_name/execute) so the panel, menu and
     plugin_entrance treat it like any single plugin.
+
+    IO_MODE is always ANY_TO_ANY: the overall cardinality depends on the steps
+    and is not practical to derive.
     """
+
+    IO_MODE = IoMode.ANY_TO_ANY
 
     def __init__(
         self,
@@ -29,6 +35,9 @@ class PluginChain(Runnable):
 
     def get_name(self):
         return self.name
+
+    def get_io_mode(self):
+        return type(self).IO_MODE
 
     def execute(self, user_input_list, history_recorder):
         """Pipe the input through every step and record the whole run.

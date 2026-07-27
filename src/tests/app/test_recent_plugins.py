@@ -4,11 +4,12 @@ from app.recent_plugins import (
     get_recent_plugins,
     record_plugin_run,
 )
-from plugins.plugin import Plugin
+from plugins.plugin import IoMode, Plugin
 
 
 class _AlphaPlugin(Plugin):
     DEFAULT_NAME = "Alpha"
+    IO_MODE = IoMode.OTHER
 
     def get_description(self):
         return "alpha"
@@ -19,6 +20,7 @@ class _AlphaPlugin(Plugin):
 
 class _BetaPlugin(Plugin):
     DEFAULT_NAME = "Beta"
+    IO_MODE = IoMode.OTHER
 
     def get_description(self):
         return "beta"
@@ -39,6 +41,7 @@ def _plugin_class(class_name, default_name):
         (Plugin,),
         {
             "DEFAULT_NAME": default_name,
+            "IO_MODE": IoMode.OTHER,
             "get_description": get_description,
             "run": run,
         },
