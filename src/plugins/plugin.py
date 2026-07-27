@@ -2,6 +2,8 @@ import ast
 import json
 from abc import ABC, abstractmethod
 
+from plugins.runnable import Runnable
+
 _TYPE_FALLBACKS = {
     "string": "",
     "number": 0,
@@ -25,7 +27,7 @@ def _schema_defaults(schema):
     return defaults
 
 
-class Plugin(ABC):
+class Plugin(ABC, Runnable):
     DEFAULT_NAME = None
     DEFAULT_OPTIONS = {}
 
@@ -85,6 +87,19 @@ class Plugin(ABC):
 
     def get_name(self):
         return self.name
+
+    def execute(self, user_input_list, history_recorder):
+        """Run this plugin and record a single standalone execution.
+
+        run() stays the pure transformation; execute() adds history so the
+        caller can treat a Plugin and a PluginChain identically. The recorder
+        turns the line lists into stored text, so no joining happens here.
+        """
+        output_list = self.run(user_input_list)
+        history_recorder.record_plugin_execution(
+            self, user_input_list, output_list
+        )
+        return output_list
 
     def get_default_name(self):
         return type(self).DEFAULT_NAME

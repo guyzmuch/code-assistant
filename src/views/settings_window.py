@@ -4,8 +4,13 @@ from tkinter import messagebox, ttk
 from app.config import load_app_config, save_app_config
 from app.context import get
 from app.plugins_loader import discover_plugin_classes
-from database.plugins_registry import archive_plugin, fetch_configured_plugins
+from database.plugins_registry import (
+    archive_chain,
+    archive_plugin,
+    fetch_configured_plugins,
+)
 from views.main_layout import apply_text_font_size
+from views.settings.chain_config_dialog import ChainConfigDialog
 from views.settings.plugin_config_dialog import PluginConfigDialog
 
 
@@ -23,11 +28,14 @@ class SettingsWindow(tk.Toplevel):
 
         self._general_tab = ttk.Frame(notebook, padding=10)
         self._plugins_tab = ttk.Frame(notebook, padding=10)
+        self._chains_tab = ttk.Frame(notebook, padding=10)
         notebook.add(self._plugins_tab, text="Plugins")
+        notebook.add(self._chains_tab, text="Chains")
         notebook.add(self._general_tab, text="General")
 
         self._build_general_tab()
         self._build_plugins_tab()
+        self._build_chains_tab()
 
     def _build_general_tab(self):
         config = load_app_config()
@@ -162,7 +170,12 @@ class SettingsWindow(tk.Toplevel):
 
     def _refresh_configured_list(self):
         self._configured_listbox.delete(0, tk.END)
-        self._configured_rows = list(fetch_configured_plugins())
+        # Only standalone plugins here; chains have their own tab.
+        self._configured_rows = [
+            row
+            for row in fetch_configured_plugins()
+            if row["chain_id"] is None
+        ]
         for row in self._configured_rows:
             self._configured_listbox.insert(tk.END, self._display_name_for_row(row))
 
@@ -243,6 +256,93 @@ class SettingsWindow(tk.Toplevel):
 
         archive_plugin(row["id"])
         self._on_plugins_changed()
+
+    def _build_chains_tab(self):
+        self._chains_tab.rowconfigure(0, weight=1)
+        self._chains_tab.columnconfigure(0, weight=1)
+
+        list_frame = ttk.LabelFrame(
+            self._chains_tab, text="Configured chains", padding=8
+        )
+        list_frame.grid(row=0, column=0, sticky="nsew")
+        list_frame.rowconfigure(0, weight=1)
+        list_frame.columnconfigure(0, weight=1)
+
+        self._chains_listbox = tk.Listbox(
+            list_frame, exportselection=False, bg="white", fg="black"
+        )
+        chains_scroll = ttk.Scrollbar(
+            list_frame, orient=tk.VERTICAL, command=self._chains_listbox.yview
+        )
+        self._chains_listbox.configure(yscrollcommand=chains_scroll.set)
+        self._chains_listbox.grid(row=0, column=0, sticky="nsew")
+        chains_scroll.grid(row=0, column=1, sticky="ns")
+
+        chains_buttons = ttk.Frame(list_frame)
+        chains_buttons.grid(row=1, column=0, columnspan=2, sticky="ew", pady=(8, 0))
+        ttk.Button(
+            chains_buttons, text="New chain", command=self._add_chain
+        ).pack(side=tk.LEFT, padx=(0, 6))
+        ttk.Button(
+            chains_buttons, text="Edit", command=self._edit_chain
+        ).pack(side=tk.LEFT, padx=(0, 6))
+        ttk.Button(
+            chains_buttons, text="Remove", command=self._remove_chain
+        ).pack(side=tk.LEFT)
+
+        self._chain_rows = []
+        self._refresh_chains_list()
+
+    def _refresh_chains_list(self):
+        self._chains_listbox.delete(0, tk.END)
+        self._chain_rows = [
+            row
+            for row in fetch_configured_plugins()
+            if row["chain_id"] is not None
+        ]
+        for row in self._chain_rows:
+            self._chains_listbox.insert(tk.END, row["custom_name"] or "Chain")
+
+    def _selected_chain_row(self):
+        selection = self._chains_listbox.curselection()
+        if not selection:
+            return None
+        return self._chain_rows[selection[0]]
+
+    def _on_chains_changed(self):
+        self._refresh_chains_list()
+        get().repopulate_plugins()
+
+    def _add_chain(self):
+        ChainConfigDialog(self, on_saved=self._on_chains_changed)
+
+    def _edit_chain(self):
+        row = self._selected_chain_row()
+        if row is None:
+            messagebox.showwarning(
+                "Edit chain", "Select a chain first.", parent=self
+            )
+            return
+        ChainConfigDialog(
+            self, chain_row=row, on_saved=self._on_chains_changed
+        )
+
+    def _remove_chain(self):
+        row = self._selected_chain_row()
+        if row is None:
+            messagebox.showwarning(
+                "Remove chain", "Select a chain first.", parent=self
+            )
+            return
+        label = row["custom_name"] or "Chain"
+        if not messagebox.askyesno(
+            "Remove chain",
+            f"Remove chain \"{label}\"?",
+            parent=self,
+        ):
+            return
+        archive_chain(row["chain_id"])
+        self._on_chains_changed()
 
 
 def open_settings_window(parent):

@@ -4,10 +4,16 @@ from tkinter import ttk
 
 from app.actions import paste_text_to_input
 from database.plugin_history import (
+    count_execution_steps,
     delete_plugin_history_entry,
+    delete_plugin_history_execution,
+    fetch_execution_steps,
     fetch_recent_plugin_history,
     history_row_title,
+    is_chain_history_row,
 )
+from database.plugin_history import _history_label as history_step_label
+from views.history_step_details import HistoryStepDetailsWindow
 
 HISTORY_ENTRY_LIMIT = 10
 DETAIL_MIN_LINES = 7
@@ -57,29 +63,49 @@ class HistoryPanel(ttk.Frame):
         frame = ttk.Frame(parent)
         frame.columnconfigure(0, weight=1)
         frame.columnconfigure(2, weight=1)
-        frame.rowconfigure(0, weight=1)
 
         detail_input = self._create_readonly_text(frame)
-        detail_separator = tk.Label(
-            frame,
+        # Middle column matches the text-area row height (sticky ns) and gets its
+        # width from packed content — place() would collapse the width to ~0.
+        # The "(N)" count is only packed for chain runs.
+        separator = tk.Frame(frame, bg=DETAIL_BG)
+        sep_content = tk.Frame(separator, bg=DETAIL_BG)
+        sep_content.pack(expand=True)
+        steps_count = tk.Label(
+            sep_content,
+            text="",
+            fg="#52525b",
+            bg=DETAIL_BG,
+            font=tkfont.Font(size=9),
+        )
+        arrow = tk.Label(
+            sep_content,
             text="›",
             fg=SEPARATOR_FG,
             bg=DETAIL_BG,
             font=tkfont.Font(size=14),
         )
+        arrow.pack()
         detail_output = self._create_readonly_text(frame)
         detail_input["container"].grid(row=0, column=0, sticky="nsew", padx=(0, 2))
-        detail_separator.grid(row=0, column=1, sticky="ns", padx=4)
+        separator.grid(row=0, column=1, sticky="ns", padx=4)
         detail_output["container"].grid(row=0, column=2, sticky="nsew", padx=(2, 0))
 
+        self._bind_tooltip(steps_count)
+
+        # Chain-only; full width, above the paste buttons.
+        show_steps_btn = ttk.Button(frame, text="Show step details")
+        show_steps_btn.grid(row=1, column=0, columnspan=3, sticky="ew", pady=(6, 0))
+        show_steps_btn.grid_remove()
+
         buttons = ttk.Frame(frame)
-        buttons.grid(row=1, column=0, columnspan=3, sticky="ew", pady=(6, 0))
+        buttons.grid(row=2, column=0, columnspan=3, sticky="ew", pady=(6, 0))
         buttons.columnconfigure(0, weight=1)
-        buttons.columnconfigure(2, weight=1)
+        buttons.columnconfigure(1, weight=1)
         paste_input_btn = ttk.Button(buttons, text="Paste to input")
         paste_output_btn = ttk.Button(buttons, text="Paste to input")
         paste_input_btn.grid(row=0, column=0, sticky="ew", padx=(0, 2))
-        paste_output_btn.grid(row=0, column=2, sticky="ew", padx=(2, 0))
+        paste_output_btn.grid(row=0, column=1, sticky="ew", padx=(2, 0))
 
         return {
             "frame": frame,
@@ -87,6 +113,9 @@ class HistoryPanel(ttk.Frame):
             "output": detail_output,
             "paste_input_btn": paste_input_btn,
             "paste_output_btn": paste_output_btn,
+            "show_steps_btn": show_steps_btn,
+            "steps_count": steps_count,
+            "arrow": arrow,
         }
 
     def _create_readonly_text(self, parent):
@@ -148,6 +177,7 @@ class HistoryPanel(ttk.Frame):
         self._detail_frame["frame"].pack_forget()
         self._set_readonly_text(self._detail_frame["input"]["widget"], "")
         self._set_readonly_text(self._detail_frame["output"]["widget"], "")
+        self._reset_chain_summary()
 
         records = fetch_recent_plugin_history(limit=HISTORY_ENTRY_LIMIT)
         if not records:
@@ -255,7 +285,7 @@ class HistoryPanel(ttk.Frame):
             row_data["row"].pack(fill=tk.X, side=tk.TOP)
             if row_data["record"]["id"] == self._expanded_record_id:
                 self._detail_frame["frame"].pack(
-                    fill=tk.BOTH, expand=True, side=tk.TOP, padx=4, pady=(0, 4)
+                    fill=tk.X, side=tk.TOP, padx=4, pady=(0, 4)
                 )
 
         self.update_idletasks()
@@ -285,7 +315,12 @@ class HistoryPanel(ttk.Frame):
         row_data["delete_btn"].configure(fg="#71717a", bg=self._header_bg(row_data))
 
     def _delete_record(self, record):
-        delete_plugin_history_entry(record["id"])
+        keys = record.keys() if hasattr(record, "keys") else record
+        execution_id = record["execution_id"] if "execution_id" in keys else None
+        if execution_id:
+            delete_plugin_history_execution(execution_id)
+        else:
+            delete_plugin_history_entry(record["id"])
         self.refresh()
 
     def _set_indicator(self, row_data, expanded):
@@ -331,7 +366,83 @@ class HistoryPanel(ttk.Frame):
                 self._input_text_area, t
             )
         )
+        self._render_chain_summary(record)
         self._relayout()
+
+    def _reset_chain_summary(self):
+        count_label = self._detail_frame["steps_count"]
+        count_label.pack_forget()
+        count_label._tooltip_text = ""
+        self._detail_frame["show_steps_btn"].grid_remove()
+
+    def _render_chain_summary(self, record):
+        self._reset_chain_summary()
+        if not is_chain_history_row(record):
+            return
+
+        step_count = count_execution_steps(record["execution_id"])
+        if not step_count:
+            return
+
+        count_label = self._detail_frame["steps_count"]
+        count_label.configure(text=f"({step_count})")
+        count_label._tooltip_text = f"{step_count} steps have been run"
+        count_label.pack(side=tk.TOP, before=self._detail_frame["arrow"])
+
+        button = self._detail_frame["show_steps_btn"]
+        button.configure(
+            command=lambda r=record: self._open_step_details(r)
+        )
+        button.grid()
+
+    def _open_step_details(self, record):
+        rows = fetch_execution_steps(record["execution_id"])
+        steps = [
+            {
+                "label": history_step_label(step),
+                "output": step["output"] or "",
+            }
+            for step in rows
+        ]
+        HistoryStepDetailsWindow(
+            self,
+            history_row_title(record),
+            record["input"] or "",
+            steps,
+        )
+
+    @staticmethod
+    def _bind_tooltip(widget):
+        """Show widget._tooltip_text on hover; nothing when it is empty."""
+        widget._tooltip_text = ""
+        widget._tooltip_popup = None
+
+        def show(_event=None):
+            text = getattr(widget, "_tooltip_text", "")
+            if not text or widget._tooltip_popup is not None:
+                return
+            popup = tk.Toplevel(widget)
+            popup.wm_overrideredirect(True)
+            popup.wm_geometry(
+                f"+{widget.winfo_rootx()}+{widget.winfo_rooty() - 26}"
+            )
+            tk.Label(
+                popup,
+                text=text,
+                bg="#18181b",
+                fg="white",
+                padx=6,
+                pady=3,
+            ).pack()
+            widget._tooltip_popup = popup
+
+        def hide(_event=None):
+            if widget._tooltip_popup is not None:
+                widget._tooltip_popup.destroy()
+                widget._tooltip_popup = None
+
+        widget.bind("<Enter>", show, add="+")
+        widget.bind("<Leave>", hide, add="+")
 
     @staticmethod
     def _set_readonly_text(text_widget, content):

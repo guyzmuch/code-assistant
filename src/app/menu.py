@@ -6,47 +6,18 @@ from app.plugin_panel import make_plugin_command
 from app.plugins_loader import discover_plugin_classes
 from app.recent_plugins import RecentPluginEntry, get_recent_plugins
 from database.plugins_registry import fetch_configured_plugins, get_plugin_by_id
+from utils.plugins import load_runnable
 from views.about_dialog import AboutDialog
 
 _plugins_menu = None
 
 
-def _display_name_for_row(row, plugin_class):
-    if row["custom_name"]:
-        return row["custom_name"]
-    return plugin_class.DEFAULT_NAME
-
-
-def _label_for_recent_entry(entry: RecentPluginEntry, plugins_by_name):
+def _runnable_from_recent_entry(entry: RecentPluginEntry, plugins_by_name):
     if entry.plugin_id is not None:
         plugin_row = get_plugin_by_id(entry.plugin_id)
-        if plugin_row is not None:
-            plugin_class = plugins_by_name.get(plugin_row["name"])
-            if plugin_class is not None:
-                if plugin_row["custom_name"]:
-                    return plugin_row["custom_name"]
-                return plugin_class.DEFAULT_NAME
-    plugin_class = plugins_by_name.get(entry.plugin_name)
-    if plugin_class is not None:
-        return plugin_class.DEFAULT_NAME
-    return entry.plugin_name
-
-
-def _plugin_instance_from_recent_entry(entry: RecentPluginEntry, plugins_by_name):
-    if entry.plugin_id is not None:
-        plugin_row = get_plugin_by_id(entry.plugin_id)
-        if plugin_row is None:
+        if plugin_row is None or plugin_row["archived"]:
             return None
-        plugin_class = plugins_by_name.get(plugin_row["name"])
-        if plugin_class is None:
-            return None
-        return plugin_class(
-            custom_name=plugin_row["custom_name"],
-            options=plugin_row["options"],
-            shortcut=plugin_row["shortcut"],
-            id=plugin_row["id"],
-            config_version=plugin_row["config_version"],
-        )
+        return load_runnable(plugin_row, plugins_by_name)
 
     plugin_class = plugins_by_name.get(entry.plugin_name)
     if plugin_class is None:
@@ -67,14 +38,12 @@ def populate_plugins_menu():
 
     recent_menu = tk.Menu(_plugins_menu, tearoff=0)
     for entry in get_recent_plugins():
-        plugin_instance = _plugin_instance_from_recent_entry(
-            entry, plugins_by_name
-        )
-        if plugin_instance is None:
+        runnable = _runnable_from_recent_entry(entry, plugins_by_name)
+        if runnable is None:
             continue
         recent_menu.add_command(
-            label=_label_for_recent_entry(entry, plugins_by_name),
-            command=make_plugin_command(plugin_instance),
+            label=runnable.get_name(),
+            command=make_plugin_command(runnable),
         )
     _plugins_menu.add_cascade(label="Recent", menu=recent_menu)
 
@@ -82,19 +51,12 @@ def populate_plugins_menu():
     for row in fetch_configured_plugins():
         if row["show_in_panel"]:
             continue
-        plugin_class = plugins_by_name.get(row["name"])
-        if plugin_class is None:
+        runnable = load_runnable(row, plugins_by_name)
+        if runnable is None:
             continue
-        plugin_instance = plugin_class(
-            custom_name=row["custom_name"],
-            options=row["options"],
-            shortcut=row["shortcut"],
-            id=row["id"],
-            config_version=row["config_version"],
-        )
         favorites_menu.add_command(
-            label=_display_name_for_row(row, plugin_class),
-            command=make_plugin_command(plugin_instance),
+            label=runnable.get_name(),
+            command=make_plugin_command(runnable),
         )
     _plugins_menu.add_cascade(label="Favorites", menu=favorites_menu)
     _plugins_menu.add_separator()

@@ -30,7 +30,9 @@ def init_schema(db_connection):
             shortcut TEXT,
             config_version INTEGER,
             archived INTEGER,
-            show_in_panel INTEGER NOT NULL DEFAULT 1
+            show_in_panel INTEGER NOT NULL DEFAULT 1,
+            chain_id TEXT,
+            chain_position INTEGER
         )""")
 
         _ensure_column(
@@ -39,6 +41,19 @@ def init_schema(db_connection):
             "show_in_panel",
             "INTEGER NOT NULL DEFAULT 1",
         )
+        # Chain grouping: a chain is several plugins rows sharing a chain_id.
+        # chain_position 0 is the chain header; positions >= 1 are its steps.
+        # Standalone plugins leave both columns NULL.
+        _ensure_column(cursor, "plugins", "chain_id", "TEXT")
+        _ensure_column(cursor, "plugins", "chain_position", "INTEGER")
+
+        # Only one active row may occupy a given (chain_id, position); archived
+        # step rows are excluded so a chain can be edited without violating it.
+        cursor.execute("""
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_plugins_chain_position
+        ON plugins(chain_id, chain_position)
+        WHERE chain_id IS NOT NULL AND archived = 0
+        """)
 
         cursor.execute("""
         CREATE TABLE IF NOT EXISTS plugin_history (
@@ -47,8 +62,14 @@ def init_schema(db_connection):
             output TEXT,
             plugin_id INTEGER,
             config_version INTEGER,
-            timestamp TEXT
+            timestamp TEXT,
+            execution_id TEXT,
+            execution_position INTEGER
         )""")
+        # Execution grouping: one run shares an execution_id. execution_position
+        # 0 is the run summary; positions >= 1 are chain step results.
+        _ensure_column(cursor, "plugin_history", "execution_id", "TEXT")
+        _ensure_column(cursor, "plugin_history", "execution_position", "INTEGER")
         db_connection.commit()
     except Exception as e:
         db_connection.rollback()

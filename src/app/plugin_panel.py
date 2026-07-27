@@ -4,15 +4,15 @@ from app.constants import COPY_SYMBOL
 from app.context import get
 from app.plugins_loader import load_plugins
 from database.plugins_registry import fetch_configured_plugins
-from utils.plugins import plugin_entrance
+from utils.plugins import load_runnable, plugin_entrance
 from utils.ui import get_text_from_clipboard
 
 
-def make_plugin_command(plugin, *, from_clipboard=False):
+def make_plugin_command(runnable, *, from_clipboard=False):
     def run():
         if from_clipboard:
             get_text_from_clipboard(get().layout.user_input_text_area)
-        plugin_entrance(plugin)
+        plugin_entrance(runnable)
 
     return run
 
@@ -41,22 +41,15 @@ def populate_plugin_buttons():
         if not plugin_from_database["show_in_panel"]:
             continue
 
-        if plugin_from_database["name"] not in plugins_dict:
+        plugin_instance = load_runnable(plugin_from_database, plugins_dict)
+        if plugin_instance is None:
             print(
-                "Plugin from database not found in plugins: ",
+                "Configured plugin could not be loaded: ",
                 plugin_from_database["name"],
             )
             continue
 
-        plugin_instance = plugins_dict[plugin_from_database["name"]](
-            custom_name=plugin_from_database["custom_name"],
-            options=plugin_from_database["options"],
-            shortcut=plugin_from_database["shortcut"],
-            id=plugin_from_database["id"],
-            config_version=plugin_from_database["config_version"],
-        )
-
-        print("Instanciated plugin: ", plugin_instance.get_name())
+        print("Instanciated runnable: ", plugin_instance.get_name())
 
         run_plugin_from_clipboard = make_plugin_command(
             plugin_instance, from_clipboard=True
