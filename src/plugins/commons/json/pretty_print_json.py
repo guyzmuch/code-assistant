@@ -23,11 +23,11 @@ def _extract_json_text(text: str) -> str:
     return text[start : end + 1]
 
 
-class StringifyJson(Plugin):
-    DEFAULT_NAME = "Stringify JSON"
+class PrettyPrintJson(Plugin):
+    DEFAULT_NAME = "Pretty-print JSON"
 
     def get_description(self):
-        return "Parse JSON from input and stringify it"
+        return "Parse JSON from input and pretty-print it"
 
     def run(self, user_input_list):
         """
