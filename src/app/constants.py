@@ -7,6 +7,6 @@ DEFAULT_PLUGIN_CLASS_NAMES = [
     "HashLines",
     "JoinBySeparator",
     "SplitBySeparator",
-    "StringifyJson",
+    "PrettyPrintJson",
     "TimestampToIsoDate",
 ]
