@@ -1,8 +1,7 @@
 import uuid
 from datetime import datetime, timezone
 
-from app.context import db_connection
-from app.plugins_loader import discover_plugin_classes
+from app.context import db_connection, plugins_by_name
 
 
 def _now_iso() -> str:
@@ -29,9 +28,9 @@ def format_history_timestamp(timestamp_iso: str) -> str:
 
 
 def _default_name_for_class(class_name: str) -> str:
-    for plugin_class in discover_plugin_classes():
-        if plugin_class.__name__ == class_name:
-            return plugin_class.DEFAULT_NAME
+    plugin_class = plugins_by_name().get(class_name)
+    if plugin_class is not None:
+        return plugin_class.DEFAULT_NAME
     return class_name
 
 

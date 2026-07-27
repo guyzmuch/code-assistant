@@ -1,5 +1,4 @@
-from app.context import get, refresh_history_if_visible
-from app.plugins_loader import discover_plugin_classes
+from app.context import get, plugins_by_name, refresh_history_if_visible
 from app.recent_plugins import record_plugin_run
 from database.plugin_history import HistoryRecorder
 from database.plugins_registry import fetch_chain_steps
@@ -8,15 +7,8 @@ from plugins.runnable import Runnable
 from utils.ui import split_lines
 
 
-def _plugins_by_class_name():
-    return {
-        plugin_class.__name__: plugin_class
-        for plugin_class in discover_plugin_classes()
-    }
-
-
-def _instantiate_plugin(row, plugins_by_name):
-    plugin_class = plugins_by_name.get(row["name"])
+def _instantiate_plugin(row):
+    plugin_class = plugins_by_name().get(row["name"])
     if plugin_class is None:
         return None
     return plugin_class(
@@ -28,21 +20,18 @@ def _instantiate_plugin(row, plugins_by_name):
     )
 
 
-def load_runnable(row, plugins_by_name=None) -> Runnable | None:
+def load_runnable(row) -> Runnable | None:
     """Turn a configured top-level row into a runnable.
 
     A standalone row becomes a Plugin; a chain header (chain_position 0) loads
     its ordered steps and becomes a PluginChain. Both implement Runnable.
     """
-    if plugins_by_name is None:
-        plugins_by_name = _plugins_by_class_name()
-
     if row["chain_id"] is None:
-        return _instantiate_plugin(row, plugins_by_name)
+        return _instantiate_plugin(row)
 
     steps = []
     for step_row in fetch_chain_steps(row["chain_id"]):
-        plugin = _instantiate_plugin(step_row, plugins_by_name)
+        plugin = _instantiate_plugin(step_row)
         if plugin is not None:
             steps.append(plugin)
     return PluginChain(

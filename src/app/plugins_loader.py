@@ -4,12 +4,17 @@ import pkgutil
 import plugins
 
 from app.constants import DEFAULT_PLUGIN_CLASS_NAMES
+from app.context import plugin_classes
 from database.plugins_registry import count_active_plugins, create_plugin
 
 
 def discover_plugin_classes():
-    """Return plugin classes by importing every module under the plugins package."""
-    plugin_classes = []
+    """Walk the plugins package and return every Plugin subclass.
+
+    Called once at app startup (via context.init). Prefer
+    ``app.context.plugin_classes()`` / ``plugins_by_name()`` elsewhere.
+    """
+    discovered = []
     prefix = plugins.__name__ + "."
 
     for module_info in pkgutil.walk_packages(plugins.__path__, prefix):
@@ -24,13 +29,9 @@ def discover_plugin_classes():
                 and hasattr(attr, "__bases__")
                 and any(base.__name__ == "Plugin" for base in attr.__bases__)
             ):
-                plugin_classes.append(attr)
+                discovered.append(attr)
 
-    return plugin_classes
-
-
-def load_plugins():
-    return discover_plugin_classes()
+    return discovered
 
 
 def plugin_category(plugin_class):
@@ -45,13 +46,11 @@ def ensure_default_plugins():
     if count_active_plugins() > 0:
         return
 
-    plugin_classes = discover_plugin_classes()
-
     # Only auto-configure plugins listed in DEFAULT_PLUGIN_CLASS_NAMES;
     # other discovered plugins stay available to add manually in Settings.
     default_classes = [
         plugin_class
-        for plugin_class in plugin_classes
+        for plugin_class in plugin_classes()
         if plugin_class.__name__ in DEFAULT_PLUGIN_CLASS_NAMES
     ]
 

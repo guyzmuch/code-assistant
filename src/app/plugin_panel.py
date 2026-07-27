@@ -2,7 +2,6 @@ from tkinter import ttk
 
 from app.constants import COPY_SYMBOL
 from app.context import get
-from app.plugins_loader import load_plugins
 from database.plugins_registry import fetch_configured_plugins
 from utils.plugins import load_runnable, plugin_entrance
 from utils.ui import get_text_from_clipboard
@@ -24,15 +23,7 @@ def clear_plugin_buttons():
 
 
 def populate_plugin_buttons():
-    ctx = get()
-    layout = ctx.layout
-
-    plugins = load_plugins()
-    print("***** End of loading plugins: loaded ", len(plugins), " plugins")
-
-    plugins_dict = {
-        plugin_class.__name__: plugin_class for plugin_class in plugins
-    }
+    layout = get().layout
 
     plugins_from_database = fetch_configured_plugins()
 
@@ -41,7 +32,7 @@ def populate_plugin_buttons():
         if not plugin_from_database["show_in_panel"]:
             continue
 
-        plugin_instance = load_runnable(plugin_from_database, plugins_dict)
+        plugin_instance = load_runnable(plugin_from_database)
         if plugin_instance is None:
             print(
                 "Configured plugin could not be loaded: ",

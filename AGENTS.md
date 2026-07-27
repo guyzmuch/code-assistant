@@ -66,7 +66,7 @@ docs/                  # user-facing docs (minimal today)
 
 - **Plugins** are Python classes subclassing `Plugin` in `src/plugins/plugin.py`. They are discovered by walking the `plugins` package (`app/plugins_loader.py`).
 - **Configured plugins** live in SQLite (`database/plugins_registry.py`). The same plugin class can appear multiple times with different names/options.
-- **App context** (`app/context.py`) holds the DB connection, layout, and history panel. Prefer `app.context.db_connection()` over threading `db_connection` through call chains.
+- **App context** (`app/context.py`) holds the DB connection, layout, history panel, and discovered plugin classes (built once at startup). Prefer `app.context.db_connection()`, `plugin_classes()`, and `plugins_by_name()` over threading those values through call chains.
 - **UI** is Tkinter with `grid` layout. Settings use JSON-schema-style option forms (`views/settings/options_form.py`).
 
 ## Database schema

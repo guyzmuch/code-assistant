@@ -3,7 +3,7 @@ import tkinter as tk
 import tkinter.scrolledtext as scrolledtext
 from tkinter import messagebox, ttk
 
-from app.plugins_loader import discover_plugin_classes
+from app.context import plugin_classes, plugins_by_name
 from database.plugins_registry import (
     create_chain,
     fetch_chain_steps,
@@ -21,13 +21,11 @@ class ChainConfigDialog(tk.Toplevel):
         self._on_saved = on_saved
         self._is_edit = chain_row is not None
 
-        self._classes_by_name = {
-            cls.__name__: cls for cls in discover_plugin_classes()
-        }
+        self._classes_by_name = plugins_by_name()
         self._classes_by_label = {
             cls.DEFAULT_NAME: cls
             for cls in sorted(
-                self._classes_by_name.values(),
+                plugin_classes(),
                 key=lambda cls: cls.DEFAULT_NAME.lower(),
             )
         }

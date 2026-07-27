@@ -2,8 +2,8 @@ import sys
 import tkinter as tk
 
 from app.branding import WINDOW_TITLE
+from app.context import plugin_classes, plugins_by_name
 from app.plugin_panel import make_plugin_command
-from app.plugins_loader import discover_plugin_classes
 from app.recent_plugins import RecentPluginEntry, get_recent_plugins
 from database.plugins_registry import fetch_configured_plugins, get_plugin_by_id
 from utils.plugins import load_runnable
@@ -12,14 +12,14 @@ from views.about_dialog import AboutDialog
 _plugins_menu = None
 
 
-def _runnable_from_recent_entry(entry: RecentPluginEntry, plugins_by_name):
+def _runnable_from_recent_entry(entry: RecentPluginEntry):
     if entry.plugin_id is not None:
         plugin_row = get_plugin_by_id(entry.plugin_id)
         if plugin_row is None or plugin_row["archived"]:
             return None
-        return load_runnable(plugin_row, plugins_by_name)
+        return load_runnable(plugin_row)
 
-    plugin_class = plugins_by_name.get(entry.plugin_name)
+    plugin_class = plugins_by_name().get(entry.plugin_name)
     if plugin_class is None:
         return None
     return plugin_class()
@@ -31,14 +31,9 @@ def populate_plugins_menu():
 
     _plugins_menu.delete(0, tk.END)
 
-    plugin_classes = discover_plugin_classes()
-    plugins_by_name = {
-        plugin_class.__name__: plugin_class for plugin_class in plugin_classes
-    }
-
     recent_menu = tk.Menu(_plugins_menu, tearoff=0)
     for entry in get_recent_plugins():
-        runnable = _runnable_from_recent_entry(entry, plugins_by_name)
+        runnable = _runnable_from_recent_entry(entry)
         if runnable is None:
             continue
         recent_menu.add_command(
@@ -51,7 +46,7 @@ def populate_plugins_menu():
     for row in fetch_configured_plugins():
         if row["show_in_panel"]:
             continue
-        runnable = load_runnable(row, plugins_by_name)
+        runnable = load_runnable(row)
         if runnable is None:
             continue
         favorites_menu.add_command(
@@ -62,7 +57,7 @@ def populate_plugins_menu():
     _plugins_menu.add_separator()
 
     for plugin_class in sorted(
-        plugin_classes, key=lambda cls: cls.DEFAULT_NAME.lower()
+        plugin_classes(), key=lambda cls: cls.DEFAULT_NAME.lower()
     ):
         plugin_instance = plugin_class()
         _plugins_menu.add_command(

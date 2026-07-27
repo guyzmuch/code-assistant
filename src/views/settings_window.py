@@ -2,8 +2,7 @@ import tkinter as tk
 from tkinter import messagebox, ttk
 
 from app.config import load_app_config, save_app_config
-from app.context import get
-from app.plugins_loader import discover_plugin_classes
+from app.context import get, plugin_classes, plugins_by_name
 from database.plugins_registry import (
     archive_chain,
     archive_plugin,
@@ -152,10 +151,6 @@ class SettingsWindow(tk.Toplevel):
         available_canvas.bind("<Configure>", _on_canvas_configure)
 
         self._configured_rows = []
-        self._plugin_classes_by_name = {
-            plugin_class.__name__: plugin_class
-            for plugin_class in discover_plugin_classes()
-        }
 
         self._refresh_configured_list()
         self._populate_available_plugins()
@@ -163,7 +158,7 @@ class SettingsWindow(tk.Toplevel):
     def _display_name_for_row(self, row):
         if row["custom_name"]:
             return row["custom_name"]
-        plugin_class = self._plugin_classes_by_name.get(row["name"])
+        plugin_class = plugins_by_name().get(row["name"])
         if plugin_class:
             return plugin_class.DEFAULT_NAME
         return row["name"]
@@ -184,7 +179,7 @@ class SettingsWindow(tk.Toplevel):
             child.destroy()
 
         for plugin_class in sorted(
-            discover_plugin_classes(), key=lambda cls: cls.DEFAULT_NAME.lower()
+            plugin_classes(), key=lambda cls: cls.DEFAULT_NAME.lower()
         ):
             row = ttk.Frame(self._available_inner)
             row.pack(fill=tk.X, pady=1)
@@ -222,7 +217,7 @@ class SettingsWindow(tk.Toplevel):
             )
             return
 
-        plugin_class = self._plugin_classes_by_name.get(row["name"])
+        plugin_class = plugins_by_name().get(row["name"])
         if plugin_class is None:
             messagebox.showerror(
                 "Edit plugin",
